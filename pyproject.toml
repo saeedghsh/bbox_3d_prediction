@@ -1,0 +1,42 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --cov=. --cov-report=term-missing"
+python_files = ["test_*.py"]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+omit = ["*/tests/*", "*/config-3.py", "*/config.py"]
+
+[tool.pylint]
+init-hook = "import os, sys; sys.path.append(os.getcwd())"
+max-line-length = 100
+
+[tool.pylint.messages_control]
+disable = ["duplicate-code"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.eggs
+    | \.git
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+exclude = '^ignore/|^tools/'  # local folders I want to skip type checking
+ignore_missing_imports = true

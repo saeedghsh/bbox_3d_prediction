@@ -1,0 +1,16 @@
+/tools/
+/dataset/
+/ignore/
+/output/
+/logs/
+.vscode/
+
+*.pyc
+*~
+__init__.py
+__pycache__
+
+htmlcov/
+.coverage
+coverage.xml
+profile.out

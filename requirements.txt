@@ -1,0 +1,15 @@
+pylint
+pytest
+pytest-cov
+black
+isort
+mypy
+torch>=1.10.0
+pytorch-lightning
+torchvision
+albumentations
+kornia
+tensorboard
+matplotlib
+pyyaml
+dvc
