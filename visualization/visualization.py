@@ -2,6 +2,7 @@
 
 # pylint: disable=no-member
 from typing import Any, Dict
+
 import cv2
 import numpy as np
 import open3d as o3d

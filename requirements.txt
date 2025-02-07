@@ -10,6 +10,8 @@ torchvision
 albumentations
 kornia
 tensorboard
-matplotlib
 pyyaml
 dvc
+numpy
+opencv-python-headless
+open3d
