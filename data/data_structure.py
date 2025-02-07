@@ -17,11 +17,11 @@ class Frame:
     mask: np.ndarray | Tensor
     bbox3d: np.ndarray | Tensor
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         Frame._assert_member_type_consistency(self)
 
     @staticmethod
-    def _assert_member_type_consistency(frame: "Frame"):
+    def _assert_member_type_consistency(frame: "Frame") -> None:
         member_types = [type(getattr(frame, f.name)) for f in fields(Frame)]
         if not len(set(member_types)) == 1:
             msg = ", ".join([f"{f.name}: {type(getattr(frame, f.name))}" for f in fields(Frame)])

@@ -39,7 +39,7 @@ def read_image(file_path: str) -> np.ndarray:
 class DatasetHandler(Dataset):
     """Custom dataset for multimodal data"""
 
-    def __init__(self, data_dir, transform: Optional[Callable] = None):
+    def __init__(self, data_dir, transform: Optional[Callable] = None) -> None:
         self._data_dir = data_dir
         self._transform = transform if transform else lambda x: x
         self._frame_ids = DatasetHandler._list_frame_ids(data_dir)
@@ -53,7 +53,7 @@ class DatasetHandler(Dataset):
         """
         return sorted([d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))])
 
-    def _verify_frames_files(self):
+    def _verify_frames_files(self) -> None:
         """
         Verify that each frame contains the expected content.
 
@@ -75,7 +75,7 @@ class DatasetHandler(Dataset):
         """Return a list of frame IDs."""
         return self._frame_ids
 
-    def __len__(self):
+    def __len__(self) -> None:
         return len(self.frame_ids)
 
     def __getitem__(self, idx: int) -> Frame:
