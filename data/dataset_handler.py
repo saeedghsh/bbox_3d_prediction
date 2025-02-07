@@ -2,7 +2,7 @@
 
 # pylint: disable=no-member
 import os
-from typing import Callable, Optional
+from typing import Any, Callable, Optional
 
 import cv2
 import numpy as np
@@ -31,15 +31,15 @@ def _rgb_path(data_dir: str, frame_id: str) -> str:
     return os.path.join(data_dir, frame_id, "rgb.jpg")
 
 
-def read_image(file_path: str) -> np.ndarray:
+def read_image(file_path: str) -> np.ndarray[Any, Any]:
     """Return the image for the given frame ID."""
     return cv2.cvtColor(cv2.imread(file_path), cv2.COLOR_BGR2RGB)
 
 
-class DatasetHandler(Dataset):
+class DatasetHandler(Dataset):  # type: ignore[misc]
     """Custom dataset for multimodal data"""
 
-    def __init__(self, data_dir, transform: Optional[Callable] = None) -> None:
+    def __init__(self, data_dir: str, transform: Optional[Callable[[Frame], Frame]] = None) -> None:
         self._data_dir = data_dir
         self._transform = transform if transform else lambda x: x
         self._frame_ids = DatasetHandler._list_frame_ids(data_dir)
@@ -79,7 +79,7 @@ class DatasetHandler(Dataset):
         """Return a list of frame IDs."""
         return self._frame_ids
 
-    def __len__(self) -> None:
+    def __len__(self) -> int:
         return len(self.frame_ids)
 
     def __getitem__(self, idx: int) -> Frame:

@@ -1,7 +1,7 @@
 """Data structures"""
 
 from dataclasses import dataclass, fields
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 import torch
@@ -12,10 +12,10 @@ from torch import Tensor
 class Frame:
     """Frame containing multimodal data"""
 
-    rgb: np.ndarray | Tensor
-    pc: np.ndarray | Tensor
-    mask: np.ndarray | Tensor
-    bbox3d: np.ndarray | Tensor
+    rgb: np.ndarray[Any, Any] | Tensor
+    pc: np.ndarray[Any, Any] | Tensor
+    mask: np.ndarray[Any, Any] | Tensor
+    bbox3d: np.ndarray[Any, Any] | Tensor
 
     def __post_init__(self) -> None:
         Frame._assert_member_type_consistency(self)
@@ -40,9 +40,9 @@ class Frame:
             if device is not None:
                 return Frame(
                     rgb=frame.rgb.to(device),
-                    pc=frame.pc.to(device),
-                    mask=frame.mask.to(device),
-                    bbox3d=frame.bbox3d.to(device),
+                    pc=frame.pc.to(device),  # type: ignore[union-attr]
+                    mask=frame.mask.to(device),  # type: ignore[union-attr]
+                    bbox3d=frame.bbox3d.to(device),  # type: ignore[union-attr]
                 )
             return frame  # Already tensors and no device change needed
 
@@ -62,7 +62,7 @@ class Frame:
             return frame
         return Frame(
             rgb=frame.rgb.cpu().numpy(),
-            pc=frame.pc.cpu().numpy(),
-            mask=frame.mask.cpu().numpy(),
-            bbox3d=frame.bbox3d.cpu().numpy(),
+            pc=frame.pc.cpu().numpy(),  # type: ignore[union-attr]
+            mask=frame.mask.cpu().numpy(),  # type: ignore[union-attr]
+            bbox3d=frame.bbox3d.cpu().numpy(),  # type: ignore[union-attr]
         )
