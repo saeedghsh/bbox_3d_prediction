@@ -19,4 +19,4 @@ jobs:
         pip install -r requirements.txt
     - name: Static type checking with mypy
       run: |
-        mypy . --explicit-package-bases
+        mypy .

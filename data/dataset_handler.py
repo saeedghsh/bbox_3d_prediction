@@ -2,7 +2,7 @@
 
 # pylint: disable=no-member
 import os
-from typing import Callable, Dict, Optional
+from typing import Callable, Optional
 
 import cv2
 import numpy as np
@@ -78,7 +78,7 @@ class DatasetHandler(Dataset):
     def __len__(self):
         return len(self.frame_ids)
 
-    def __getitem__(self, idx: int) -> Dict:
+    def __getitem__(self, idx: int) -> Frame:
         frame_id = self.frame_ids[idx]
         frame = Frame(
             rgb=read_image(_rgb_path(self.data_dir, frame_id)),
