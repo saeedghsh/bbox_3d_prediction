@@ -60,10 +60,14 @@ class DatasetHandler(Dataset):
         expected content: bbox3d.npy, mask.npy, pc.npy, rgb.jpg
         """
         for frame_id in self.frame_ids:
-            os.path.isfile(_bbox3d_path(self._data_dir, frame_id))
-            os.path.isfile(_mask_path(self._data_dir, frame_id))
-            os.path.isfile(_pc_path(self._data_dir, frame_id))
-            os.path.isfile(_rgb_path(self._data_dir, frame_id))
+            if not os.path.isfile(_bbox3d_path(self._data_dir, frame_id)):
+                raise FileNotFoundError(f"Missing 3D bounding box for frame {frame_id}")
+            if not os.path.isfile(_mask_path(self._data_dir, frame_id)):
+                raise FileNotFoundError(f"Missing mask for frame {frame_id}")
+            if not os.path.isfile(_pc_path(self._data_dir, frame_id)):
+                raise FileNotFoundError(f"Missing point cloud for frame {frame_id}")
+            if not os.path.isfile(_rgb_path(self._data_dir, frame_id)):
+                raise FileNotFoundError(f"Missing RGB image for frame {frame_id}")
 
     @property
     def data_dir(self) -> str:
