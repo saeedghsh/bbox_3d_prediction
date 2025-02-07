@@ -36,7 +36,7 @@ def read_image(file_path: str) -> np.ndarray[Any, Any]:
     return cv2.cvtColor(cv2.imread(file_path), cv2.COLOR_BGR2RGB)
 
 
-class DatasetHandler(Dataset):  # type: ignore[misc]
+class DatasetHandler(Dataset):  # type: ignore[type-arg]
     """Custom dataset for multimodal data"""
 
     def __init__(self, data_dir: str, transform: Optional[Callable[[Frame], Frame]] = None) -> None:
