@@ -25,7 +25,7 @@ def _draw_frame(dataset_handler: DatasetHandler, visualizer: Visualizer) -> None
 
 
 def main(_: Sequence[str]) -> int:
-    """Main entry point for splitting and caching the dataset."""
+    """Main function: loads the dataset and visualizes the data."""
     data_dir = "dataset/dl_challenge"
 
     dataset_handler = DatasetHandler(data_dir)

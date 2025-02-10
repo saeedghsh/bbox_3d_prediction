@@ -38,4 +38,4 @@ Portions of this code/project were developed with the assistance of ChatGPT (a p
 Copyright (C) Saeed Gholami Shahbandi
 ```
 
-Distributed with a GNU GENERAL PUBLIC LICENSE; see [LICENSE](https://github.com/saeedghsh/music/blob/master/LICENSE).
+Distributed with a GNU GENERAL PUBLIC LICENSE; see [LICENSE](https://github.com/saeedghsh/bbox_3d_prediction/blob/master/LICENSE).
