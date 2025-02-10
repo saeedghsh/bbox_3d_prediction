@@ -53,10 +53,10 @@ def test_frame_as_tensor(request: pytest.FixtureRequest) -> None:
     frame_as_tensor = request.getfixturevalue("tensor_frame")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     frame_on_device = Frame.as_tensor(frame_as_tensor, device=device)
-    assert frame_on_device.rgb.device == device  # type: ignore[union-attr]
-    assert frame_on_device.pc.device == device  # type: ignore[union-attr]
-    assert frame_on_device.mask.device == device  # type: ignore[union-attr]
-    assert frame_on_device.bbox3d.device == device  # type: ignore[union-attr]
+    assert frame_on_device.rgb.device == device
+    assert frame_on_device.pc.device == device
+    assert frame_on_device.mask.device == device
+    assert frame_on_device.bbox3d.device == device
     # already tensor, already on target device
     frame_as_tensor = request.getfixturevalue("tensor_frame")
     same_frame = Frame.as_tensor(frame_as_tensor)  # No device change
