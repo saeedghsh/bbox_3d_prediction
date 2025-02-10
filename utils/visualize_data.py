@@ -7,6 +7,8 @@ from typing import Sequence
 from data.dataset_handler import DatasetHandler
 from visualization.visualization import Visualizer
 
+DATA_DIR = "dataset/dl_challenge"
+
 
 def _draw_frame(dataset_handler: DatasetHandler, visualizer: Visualizer) -> None:
     while True:
@@ -26,9 +28,7 @@ def _draw_frame(dataset_handler: DatasetHandler, visualizer: Visualizer) -> None
 
 def main(_: Sequence[str]) -> int:
     """Main function: loads the dataset and visualizes the data."""
-    data_dir = "dataset/dl_challenge"
-
-    dataset_handler = DatasetHandler(data_dir)
+    dataset_handler = DatasetHandler(DATA_DIR)
     visualizer = Visualizer(config={"visualize_2d": True, "visualize_3d": True})
     _draw_frame(dataset_handler, visualizer)
 
