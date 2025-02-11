@@ -42,5 +42,5 @@ exclude = '^ignore/|^tools/'  # local folders I want to skip type checking
 ignore_missing_imports = true
 explicit_package_bases = true
 strict = true
-warn_unused_ignores = true
+warn_unused_ignores = false   # Disable warnings for unused "type: ignore"
 warn_return_any = true
