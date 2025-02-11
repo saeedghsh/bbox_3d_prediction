@@ -33,6 +33,7 @@ tuna profile.out
 ## TODO
 * [ ] complete test coverage
 * [ ] fix the discrepancy between local and remote execution of the `mypy`.
+* [ ] speed up github CI workflows
 
 ## Note
 Portions of this code/project were developed with the assistance of ChatGPT (a product of OpenAI) and Copilot (A product of Microsoft).
