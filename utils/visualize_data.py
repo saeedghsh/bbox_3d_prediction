@@ -11,17 +11,25 @@ DATA_DIR = "dataset/dl_challenge"
 
 
 def _draw_frame(dataset_handler: DatasetHandler, visualizer: Visualizer) -> None:
+    idx = 0
     while True:
-        user_input = input("Enter index (or 'q' to quit): ").strip()
+        user_input = input("Enter index, or 'n' for next (or 'q' to quit): ").strip()
+        if not user_input.isdigit() and not user_input.lower() in ["q", "n"]:
+            print("Warning: enter a number, 'n' or 'q'")
+            continue
+
         if user_input.lower() == "q":
             return
-        if not user_input.isdigit():
-            print("Warning: enter a number")
-            continue
-        idx = int(user_input)
+        if user_input.lower() == "n":
+            idx += 1
+        else:
+            idx = int(user_input)
+
         if not 0 <= idx < len(dataset_handler):
             print(f"Warning: out of index (has to be between 0 and {len(dataset_handler) - 1})")
             continue
+
+        print(f"Visualizing frame {idx}")
         frame = dataset_handler[idx]
         visualizer.visualize_frame(frame)
 
