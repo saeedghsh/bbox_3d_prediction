@@ -33,7 +33,7 @@ def _rgb_path(data_dir: str, frame_id: str) -> str:
 
 def read_image(file_path: str) -> np.ndarray[Any, Any]:
     """Return the image for the given frame ID."""
-    return cv2.cvtColor(cv2.imread(file_path), cv2.COLOR_BGR2RGB)
+    return cv2.imread(file_path)
 
 
 class DatasetHandler(Dataset):  # type: ignore[type-arg]
