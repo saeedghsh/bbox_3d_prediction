@@ -3,7 +3,7 @@
 from torch import Tensor, nn
 
 
-class Simple3DModel(nn.Module):  # type: ignore[misc]
+class Pretrained3DModel(nn.Module):  # type: ignore[misc]
     # pylint: disable=missing-class-docstring, missing-function-docstring
     def __init__(self, out_features: int = 128) -> None:
         super().__init__()

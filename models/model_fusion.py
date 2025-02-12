@@ -4,7 +4,7 @@ import torch
 from torch import Tensor, nn
 
 from models.model_2d import Pretrained2DModel
-from models.model_3d import Simple3DModel
+from models.model_3d import Pretrained3DModel
 
 
 class FusionModel(nn.Module):  # type: ignore[misc]
@@ -12,7 +12,7 @@ class FusionModel(nn.Module):  # type: ignore[misc]
     def __init__(self, fusion_out: int = 256, num_classes: int = 10) -> None:
         super().__init__()
         self._model2d = Pretrained2DModel(out_features=128)
-        self._model3d = Simple3DModel(out_features=128)
+        self._model3d = Pretrained3DModel(out_features=128)
         self._fusion = nn.Sequential(
             nn.Linear(256, fusion_out), nn.ReLU(), nn.Linear(fusion_out, num_classes)
         )
@@ -22,7 +22,7 @@ class FusionModel(nn.Module):  # type: ignore[misc]
         return self._model2d
 
     @property
-    def model3d(self) -> Simple3DModel:
+    def model3d(self) -> Pretrained3DModel:
         return self._model3d
 
     @property
