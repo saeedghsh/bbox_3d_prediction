@@ -144,6 +144,42 @@ def _camera_frustum() -> o3d.geometry.LineSet:
     return pyramid
 
 
+def _find_top_left(mask: np.ndarray[Any, Any]) -> tuple[int, int] | None:
+    """Find the most top-left point in a given mask region."""
+    mask_indices = np.column_stack(np.where(mask > 0))
+    if mask_indices.size == 0:
+        return None
+    return tuple(mask_indices[np.lexsort((mask_indices[:, 1], mask_indices[:, 0]))][0])
+
+
+def _overlay_mask_indices(mask_vis: np.ndarray[Any, Any], frame: Frame) -> None:
+    """Overlay mask indices on the visualization at the most top-left points."""
+    for i in range(frame.mask.shape[0]):
+        top_left = _find_top_left(frame.mask[i])  # type: ignore[arg-type]
+        if top_left:
+            y_min, x_min = top_left
+            cv2.putText(
+                mask_vis,
+                str(i),
+                (x_min, y_min),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (255, 255, 255),
+                1,
+                cv2.LINE_AA,
+            )
+
+
+def _generate_mask_overlay(frame: Frame) -> np.ndarray[Any, Any]:
+    """Generate a colorized overlay of the mask."""
+    h, w, _ = frame.rgb.shape
+    mask_vis = np.zeros((h, w, 3), dtype=np.uint8)
+    colors = np.random.randint(0, 255, (frame.mask.shape[0], 3), dtype=np.uint8)
+    for i in range(frame.mask.shape[0]):
+        mask_vis[frame.mask[i] > 0] = colors[i]
+    return mask_vis
+
+
 class Visualizer:  # pylint: disable=too-few-public-methods
     """Visualize images and point clouds from the dataset."""
 
@@ -151,12 +187,8 @@ class Visualizer:  # pylint: disable=too-few-public-methods
         self._config = config
 
     def _visualize_2d(self, frame: Frame) -> None:
-        h, w, _ = frame.rgb.shape
-        mask_vis = np.zeros((h, w, 3), dtype=np.uint8)
-        colors = np.random.randint(0, 255, (frame.mask.shape[0], 3), dtype=np.uint8)
-        for i in range(frame.mask.shape[0]):
-            mask_vis[frame.mask[i] > 0] = colors[i]
-
+        mask_vis = _generate_mask_overlay(frame)
+        _overlay_mask_indices(mask_vis, frame)
         stacked = np.hstack((frame.rgb, mask_vis))
         cv2.imshow("RGB & Mask", stacked)
         cv2.waitKey(0)
