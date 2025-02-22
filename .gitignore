@@ -1,6 +1,4 @@
-/tools/
 /dataset/
-/ignore/
 /output/
 /logs/
 .vscode/
@@ -13,3 +11,4 @@ htmlcov/
 .coverage
 coverage.xml
 profile.out
+extras
