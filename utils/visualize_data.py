@@ -11,16 +11,16 @@ DATA_DIR = "dataset/dl_challenge"
 
 
 def _draw_frame(dataset_handler: DatasetHandler, visualizer: Visualizer) -> None:
-    idx = 0
+    idx = -1
     while True:
-        user_input = input("Enter index, or 'n' for next (or 'q' to quit): ").strip()
-        if not user_input.isdigit() and not user_input.lower() in ["q", "n"]:
-            print("Warning: enter a number, 'n' or 'q'")
+        user_input = input("Enter index, or empty string for next (or 'q' to quit): ").strip()
+        if not user_input.isdigit() and not user_input.lower() in ["q", ""]:
+            print("Warning: enter a number, empty string, or 'q'")
             continue
 
         if user_input.lower() == "q":
             return
-        if user_input.lower() == "n":
+        if user_input.lower() == "":
             idx += 1
         else:
             idx = int(user_input)
