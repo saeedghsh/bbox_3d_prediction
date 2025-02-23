@@ -7,7 +7,14 @@
 # 3D Bounding Box Prediction
 A deep learning pipeline for 3D bounding box prediction of objects from color image and point cloud data.
 
+### Install dependencies
+```bash
+sudo apt install libgtk2.0-dev pkg-config
+pip install -r requirements.txt
+```
+
 ### Usage examples
+
 **Simple visualization of the dataset**
 ```bash
 python -m utils.visualize_data
@@ -25,10 +32,13 @@ $ pylint $(git ls-files '*.py')
 
 **Tests and coverage**
 ```bash
-$ xvfb-run --auto-servernum pytest
-$ xvfb-run --auto-servernum pytest --cov=.
-$ xvfb-run --auto-servernum pytest --cov=. --cov-report html; firefox htmlcov/index.html
+$ pytest --cov=. --cov-report html; firefox htmlcov/index.html
 $ coverage report -m # see which lines are missing coverage
+```
+
+NOTE: using `xvfb-run` is useful for running pytest when testing GUI stuff, e.g. on a headless remote (i.e. CI in `github/workflows`).
+```bash
+$ xvfb-run --auto-servernum pytest
 ```
 
 **Profiling** (if needed)
@@ -38,6 +48,7 @@ tuna profile.out
 ```
 
 ## TODO
+**Workflow and code quality**:
 * [ ] complete test coverage
 * [ ] fix the discrepancy between local and remote execution of the `mypy`.
 * [ ] speed up github CI workflows
