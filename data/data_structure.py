@@ -1,7 +1,6 @@
 """Data structures"""
 
 from dataclasses import dataclass
-from typing import Any
 
 import numpy as np
 
@@ -10,7 +9,7 @@ import numpy as np
 class Frame:
     """Frame containing multimodal data"""
 
-    rgb: np.ndarray[Any, Any]
-    pc: np.ndarray[Any, Any]
-    mask: np.ndarray[Any, Any]
-    bbox3d: np.ndarray[Any, Any]
+    rgb: np.ndarray
+    pc: np.ndarray
+    mask: np.ndarray
+    bbox3d: np.ndarray

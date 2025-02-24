@@ -8,8 +8,6 @@ import cv2
 import numpy as np
 import open3d as o3d
 
-# from data.data_structure import Frame
-
 
 class Color:
     """Color utility class for drawing."""
@@ -144,7 +142,7 @@ def _camera_frustum() -> o3d.geometry.LineSet:
     return pyramid
 
 
-def _find_top_left(mask: np.ndarray[Any, Any]) -> tuple[int, int] | None:
+def _find_top_left(mask: np.ndarray) -> tuple[int, int] | None:
     """Find the most top-left point in a given mask region."""
     mask_indices = np.column_stack(np.where(mask > 0))
     if mask_indices.size == 0:
@@ -152,7 +150,7 @@ def _find_top_left(mask: np.ndarray[Any, Any]) -> tuple[int, int] | None:
     return tuple(mask_indices[np.lexsort((mask_indices[:, 1], mask_indices[:, 0]))][0])
 
 
-def _overlay_mask_indices(mask_vis: np.ndarray[Any, Any], frame_mask: np.ndarray[Any, Any]) -> None:
+def _overlay_mask_indices(mask_vis: np.ndarray, frame_mask: np.ndarray) -> None:
     """Overlay mask indices on the visualization at the most top-left points."""
     for i in range(frame_mask.shape[0]):
         top_left = _find_top_left(frame_mask[i])  # type: ignore[arg-type]
@@ -170,9 +168,7 @@ def _overlay_mask_indices(mask_vis: np.ndarray[Any, Any], frame_mask: np.ndarray
             )
 
 
-def _generate_mask_overlay(
-    frame_rgb: np.ndarray[Any, Any], frame_mask: np.ndarray[Any, Any]
-) -> np.ndarray[Any, Any]:
+def _generate_mask_overlay(frame_rgb: np.ndarray, frame_mask: np.ndarray) -> np.ndarray:
     """Generate a colorized overlay of the mask."""
     h, w, _ = frame_rgb.shape
     mask_vis = np.zeros((h, w, 3), dtype=np.uint8)
@@ -188,9 +184,7 @@ class Visualizer:  # pylint: disable=too-few-public-methods
     def __init__(self, config: Dict[str, Any]) -> None:
         self._config = config
 
-    def _visualize_2d(
-        self, frame_rgb: np.ndarray[Any, Any], frame_mask: np.ndarray[Any, Any]
-    ) -> None:
+    def _visualize_2d(self, frame_rgb: np.ndarray, frame_mask: np.ndarray) -> None:
 
         mask_vis = _generate_mask_overlay(frame_rgb, frame_mask)
         _overlay_mask_indices(mask_vis, frame_mask)
@@ -200,10 +194,7 @@ class Visualizer:  # pylint: disable=too-few-public-methods
         cv2.destroyAllWindows()
 
     def _visualize_3d(
-        self,
-        frame_rgb: np.ndarray[Any, Any],
-        frame_pc: np.ndarray[Any, Any],
-        frame_bbox3d: np.ndarray[Any, Any],
+        self, frame_rgb: np.ndarray, frame_pc: np.ndarray, frame_bbox3d: np.ndarray
     ) -> None:
         points = frame_pc.reshape(3, -1).T
         colors = frame_rgb.reshape(-1, 3) / 255.0  # Normalize RGB for Open3D
@@ -231,10 +222,10 @@ class Visualizer:  # pylint: disable=too-few-public-methods
 
     def visualize_frame(
         self,
-        frame_rgb: np.ndarray[Any, Any],
-        frame_pc: np.ndarray[Any, Any],
-        frame_mask: np.ndarray[Any, Any],
-        frame_bbox3d: np.ndarray[Any, Any],
+        frame_rgb: np.ndarray,
+        frame_pc: np.ndarray,
+        frame_mask: np.ndarray,
+        frame_bbox3d: np.ndarray,
     ) -> None:
         """Visualize a frame with its image, point cloud, and annotations."""
         if self._config["visualize_3d"]:

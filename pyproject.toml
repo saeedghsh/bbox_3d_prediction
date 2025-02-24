@@ -47,3 +47,4 @@ explicit_package_bases = true
 strict = true
 warn_unused_ignores = false   # Disable warnings for unused "type: ignore"
 warn_return_any = true
+disable_error_code = "type-arg" # Missing type parameters for generic type 'ndarray'

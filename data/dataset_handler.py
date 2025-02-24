@@ -2,7 +2,7 @@
 
 # pylint: disable=no-member
 import os
-from typing import Any, Callable, Optional, Tuple
+from typing import Callable, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -31,7 +31,7 @@ def _rgb_path(data_dir: str, frame_id: str) -> str:
     return os.path.join(data_dir, frame_id, "rgb.jpg")
 
 
-def read_image(file_path: str) -> np.ndarray[Any, Any]:
+def read_image(file_path: str) -> np.ndarray:
     """Return the image for the given frame ID."""
     return cv2.imread(file_path)
 
@@ -84,11 +84,7 @@ class DatasetHandler(Dataset):  # type: ignore[type-arg]
     def __len__(self) -> int:
         return len(self._frame_ids)
 
-    def __getitem__(
-        self, idx: int
-    ) -> Tuple[
-        np.ndarray[Any, Any], np.ndarray[Any, Any], np.ndarray[Any, Any], np.ndarray[Any, Any]
-    ]:
+    def __getitem__(self, idx: int) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """Return the RGB image, point cloud, mask, and 3D bounding box for the specified index"""
         frame = self._frame(idx)
         return frame.rgb, frame.pc, frame.mask, frame.bbox3d
