@@ -30,8 +30,8 @@ def _draw_frame(dataset_handler: DatasetHandler, visualizer: Visualizer) -> None
             continue
 
         print(f"Visualizing frame {idx}")
-        frame = dataset_handler[idx]
-        visualizer.visualize_frame(frame)
+        frame_rgb, frame_pc, frame_mask, frame_bbox3d = dataset_handler[idx]
+        visualizer.visualize_frame(frame_rgb, frame_pc, frame_mask, frame_bbox3d)
 
 
 def main(_: Sequence[str]) -> int:

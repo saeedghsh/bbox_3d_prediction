@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 import open3d as o3d
 
-from data.data_structure import Frame
+# from data.data_structure import Frame
 
 
 class Color:
@@ -152,10 +152,10 @@ def _find_top_left(mask: np.ndarray[Any, Any]) -> tuple[int, int] | None:
     return tuple(mask_indices[np.lexsort((mask_indices[:, 1], mask_indices[:, 0]))][0])
 
 
-def _overlay_mask_indices(mask_vis: np.ndarray[Any, Any], frame: Frame) -> None:
+def _overlay_mask_indices(mask_vis: np.ndarray[Any, Any], frame_mask: np.ndarray[Any, Any]) -> None:
     """Overlay mask indices on the visualization at the most top-left points."""
-    for i in range(frame.mask.shape[0]):
-        top_left = _find_top_left(frame.mask[i])  # type: ignore[arg-type]
+    for i in range(frame_mask.shape[0]):
+        top_left = _find_top_left(frame_mask[i])  # type: ignore[arg-type]
         if top_left:
             y_min, x_min = top_left
             cv2.putText(
@@ -170,13 +170,15 @@ def _overlay_mask_indices(mask_vis: np.ndarray[Any, Any], frame: Frame) -> None:
             )
 
 
-def _generate_mask_overlay(frame: Frame) -> np.ndarray[Any, Any]:
+def _generate_mask_overlay(
+    frame_rgb: np.ndarray[Any, Any], frame_mask: np.ndarray[Any, Any]
+) -> np.ndarray[Any, Any]:
     """Generate a colorized overlay of the mask."""
-    h, w, _ = frame.rgb.shape
+    h, w, _ = frame_rgb.shape
     mask_vis = np.zeros((h, w, 3), dtype=np.uint8)
-    colors = np.random.randint(0, 255, (frame.mask.shape[0], 3), dtype=np.uint8)
-    for i in range(frame.mask.shape[0]):
-        mask_vis[frame.mask[i] > 0] = colors[i]
+    colors = np.random.randint(0, 255, (frame_mask.shape[0], 3), dtype=np.uint8)
+    for i in range(frame_mask.shape[0]):
+        mask_vis[frame_mask[i] > 0] = colors[i]
     return mask_vis
 
 
@@ -186,17 +188,25 @@ class Visualizer:  # pylint: disable=too-few-public-methods
     def __init__(self, config: Dict[str, Any]) -> None:
         self._config = config
 
-    def _visualize_2d(self, frame: Frame) -> None:
-        mask_vis = _generate_mask_overlay(frame)
-        _overlay_mask_indices(mask_vis, frame)
-        stacked = np.hstack((frame.rgb, mask_vis))
+    def _visualize_2d(
+        self, frame_rgb: np.ndarray[Any, Any], frame_mask: np.ndarray[Any, Any]
+    ) -> None:
+
+        mask_vis = _generate_mask_overlay(frame_rgb, frame_mask)
+        _overlay_mask_indices(mask_vis, frame_mask)
+        stacked = np.hstack((frame_rgb, mask_vis))
         cv2.imshow("RGB & Mask", stacked)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
-    def _visualize_3d(self, frame: Frame) -> None:
-        points = frame.pc.reshape(3, -1).T
-        colors = frame.rgb.reshape(-1, 3) / 255.0  # Normalize RGB for Open3D
+    def _visualize_3d(
+        self,
+        frame_rgb: np.ndarray[Any, Any],
+        frame_pc: np.ndarray[Any, Any],
+        frame_bbox3d: np.ndarray[Any, Any],
+    ) -> None:
+        points = frame_pc.reshape(3, -1).T
+        colors = frame_rgb.reshape(-1, 3) / 255.0  # Normalize RGB for Open3D
 
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(points)
@@ -208,7 +218,7 @@ class Visualizer:  # pylint: disable=too-few-public-methods
             + [[i, i + 4] for i in range(4)]
         )
         bboxes = []
-        for box in frame.bbox3d:
+        for box in frame_bbox3d:
             line_set = o3d.geometry.LineSet()
             line_set.points = o3d.utility.Vector3dVector(box)
             line_set.lines = o3d.utility.Vector2iVector(lines)
@@ -219,9 +229,15 @@ class Visualizer:  # pylint: disable=too-few-public-methods
         geometries = [pcd] + bboxes + [_camera_frustum()]
         _draw_with_custom_camera_view(geometries)
 
-    def visualize_frame(self, frame: Frame) -> None:
+    def visualize_frame(
+        self,
+        frame_rgb: np.ndarray[Any, Any],
+        frame_pc: np.ndarray[Any, Any],
+        frame_mask: np.ndarray[Any, Any],
+        frame_bbox3d: np.ndarray[Any, Any],
+    ) -> None:
         """Visualize a frame with its image, point cloud, and annotations."""
         if self._config["visualize_3d"]:
-            self._visualize_3d(frame)
+            self._visualize_3d(frame_rgb, frame_pc, frame_bbox3d)
         if self._config["visualize_2d"]:
-            self._visualize_2d(frame)
+            self._visualize_2d(frame_rgb, frame_mask)

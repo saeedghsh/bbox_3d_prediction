@@ -2,7 +2,7 @@
 
 # pylint: disable=no-member
 import os
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -59,7 +59,7 @@ class DatasetHandler(Dataset):  # type: ignore[type-arg]
 
         expected content: bbox3d.npy, mask.npy, pc.npy, rgb.jpg
         """
-        for frame_id in self.frame_ids:
+        for frame_id in self._frame_ids:
             if not os.path.isfile(_bbox3d_path(self._data_dir, frame_id)):
                 raise FileNotFoundError(f"Missing 3D bounding box for frame {frame_id}")
             if not os.path.isfile(_mask_path(self._data_dir, frame_id)):
@@ -69,26 +69,26 @@ class DatasetHandler(Dataset):  # type: ignore[type-arg]
             if not os.path.isfile(_rgb_path(self._data_dir, frame_id)):
                 raise FileNotFoundError(f"Missing RGB image for frame {frame_id}")
 
-    @property
-    def data_dir(self) -> str:
-        """Return path to the dataset folder."""
-        return self._data_dir
-
-    @property
-    def frame_ids(self) -> list[str]:
-        """Return a list of frame IDs."""
-        return self._frame_ids
-
-    def __len__(self) -> int:
-        return len(self.frame_ids)
-
-    def __getitem__(self, idx: int) -> Frame:
-        frame_id = self.frame_ids[idx]
+    def _frame(self, idx: int) -> Frame:
+        """Return the frame at the specified index."""
+        frame_id = self._frame_ids[idx]
         frame = Frame(
-            rgb=read_image(_rgb_path(self.data_dir, frame_id)),
-            pc=np.load(_pc_path(self.data_dir, frame_id)),
-            mask=np.load(_mask_path(self.data_dir, frame_id)),
-            bbox3d=np.load(_bbox3d_path(self.data_dir, frame_id)),
+            rgb=read_image(_rgb_path(self._data_dir, frame_id)),
+            pc=np.load(_pc_path(self._data_dir, frame_id)),
+            mask=np.load(_mask_path(self._data_dir, frame_id)),
+            bbox3d=np.load(_bbox3d_path(self._data_dir, frame_id)),
         )
         frame = self._transform(frame)
         return frame
+
+    def __len__(self) -> int:
+        return len(self._frame_ids)
+
+    def __getitem__(
+        self, idx: int
+    ) -> Tuple[
+        np.ndarray[Any, Any], np.ndarray[Any, Any], np.ndarray[Any, Any], np.ndarray[Any, Any]
+    ]:
+        """Return the RGB image, point cloud, mask, and 3D bounding box for the specified index"""
+        frame = self._frame(idx)
+        return frame.rgb, frame.pc, frame.mask, frame.bbox3d
