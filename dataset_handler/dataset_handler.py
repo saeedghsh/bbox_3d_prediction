@@ -50,7 +50,7 @@ class DatasetHandler(Dataset):  # type: ignore[type-arg]
         self, config: Dict[str, Any], transform: Optional[Callable[[Frame], Frame]] = None
     ) -> None:
         self._config = config
-        self._data_dir = Path(config["dir"]).resolve()
+        self._data_dir = Path(config["dataset_dir"]).resolve()
         self._file_paths = FilePaths(self._data_dir)
 
         self._transform = transform if transform else lambda x: x
