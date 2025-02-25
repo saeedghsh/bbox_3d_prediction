@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-from config.configuration_reader import read_config
+from config.configuration import read_config
 from dataset_handler.dataset_handler import DatasetHandler
 from visualization.visualization import Visualizer
 

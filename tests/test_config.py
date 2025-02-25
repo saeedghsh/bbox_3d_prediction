@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from config.configuration_reader import read_config
+from config.configuration import read_config
 
 
 @pytest.mark.parametrize(
