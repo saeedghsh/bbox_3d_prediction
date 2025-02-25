@@ -3,13 +3,11 @@
 # pylint: disable=no-member
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Optional, Tuple
+from typing import Any, Callable, Dict, Optional, Tuple
 
 import cv2
 import numpy as np
 from torch.utils.data import Dataset
-
-from config.configuration import read_config
 
 
 class FilePaths:
@@ -49,9 +47,9 @@ class DatasetHandler(Dataset):  # type: ignore[type-arg]
     """Custom dataset for multimodal data"""
 
     def __init__(
-        self, config_path: Path, transform: Optional[Callable[[Frame], Frame]] = None
+        self, config: Dict[str, Any], transform: Optional[Callable[[Frame], Frame]] = None
     ) -> None:
-        self._config = read_config(config_path)
+        self._config = config
         self._data_dir = Path(self._config["dataset_dir"]).resolve()
         self._file_paths = FilePaths(self._data_dir)
 
