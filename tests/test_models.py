@@ -44,7 +44,7 @@ def backbone3d_model_fixture(request: FixtureRequest) -> Backbone3DModel:
 
 @pytest.fixture
 def fusion_model_fixture() -> FusionModel:
-    return FusionModel(feat2d_channels=16, feat3d_channels=16, fusion_out_channels=32)
+    return FusionModel(feat2d_channels=16, feat3d_channels=16, out_channels=32)
 
 
 @pytest.fixture
@@ -56,7 +56,7 @@ def segmentation_model_fixture(request: FixtureRequest) -> SegmentationModel:
         backbone2d=model2d,
         backbone3d=model3d,
         fusion=fusion,
-        segmentation_out_channels=8,
+        out_channels=8,
     )
 
 

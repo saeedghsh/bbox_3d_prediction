@@ -10,15 +10,13 @@ class FusionModel(nn.Module):
     Expects as input two feature maps with the same spatial dimensions.
     """
 
-    def __init__(
-        self, feat2d_channels: int, feat3d_channels: int, fusion_out_channels: int
-    ) -> None:
+    def __init__(self, feat2d_channels: int, feat3d_channels: int, out_channels: int) -> None:
         super().__init__()
         self._in_channels = feat2d_channels + feat3d_channels
         self._fusion_head = nn.Sequential(
-            nn.Conv2d(self._in_channels, fusion_out_channels, kernel_size=3, padding=1), nn.ReLU()
+            nn.Conv2d(self._in_channels, out_channels, kernel_size=3, padding=1), nn.ReLU()
         )
-        self._out_channels = fusion_out_channels
+        self._out_channels = out_channels
 
     @property
     def out_channels(self) -> int:

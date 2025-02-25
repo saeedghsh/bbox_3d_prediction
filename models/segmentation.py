@@ -18,18 +18,16 @@ class SegmentationModel(nn.Module):
         backbone2d: Backbone2DModel,
         backbone3d: Backbone3DModel,
         fusion: FusionModel,
-        segmentation_out_channels: int,
+        out_channels: int,  # segmentation's out_channels
     ) -> None:
         super().__init__()
         self._backbone2d = backbone2d
         self._backbone3d = backbone3d
         self._fusion = fusion
         self._segmentation_head = nn.Sequential(
-            nn.Conv2d(
-                self._fusion.out_channels, segmentation_out_channels, kernel_size=3, padding=1
-            ),
+            nn.Conv2d(self._fusion.out_channels, out_channels, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.Conv2d(segmentation_out_channels, segmentation_out_channels, kernel_size=1),
+            nn.Conv2d(out_channels, out_channels, kernel_size=1),
         )
 
     @property
