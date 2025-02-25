@@ -5,7 +5,6 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-from config.configuration import read_config
 from dataset_handler.dataset_handler import DatasetHandler
 from visualization.visualization import Visualizer
 
@@ -37,8 +36,7 @@ def _draw_frame(dataset_handler: DatasetHandler, visualizer: Visualizer) -> None
 def main(_: Sequence[str]) -> int:
     """Main function: loads the dataset and visualizes the data."""
     data_config_path = Path("./config/data.yaml").resolve()
-    dataset_handler_config = read_config(data_config_path)
-    dataset_handler = DatasetHandler(dataset_handler_config)
+    dataset_handler = DatasetHandler(data_config_path)
 
     visualizer = Visualizer(config={"visualize_2d": True, "visualize_3d": True})
     _draw_frame(dataset_handler, visualizer)
