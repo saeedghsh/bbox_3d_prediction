@@ -1,7 +1,6 @@
 """Module for custom dataset class for multimodal data"""
 
 # pylint: disable=no-member
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Tuple
@@ -11,29 +10,27 @@ import numpy as np
 from torch.utils.data import Dataset
 
 
-def _bbox3d_path(data_dir: Path, frame_id: str) -> str:
-    """Return the path to the 3D bounding box for the specified frame ID."""
-    return os.path.join(data_dir, frame_id, "bbox3d.npy")
+class FilePaths:
+    """Class to manage file paths for multimodal data"""
 
+    def __init__(self, data_dir: Path):
+        self._data_dir = data_dir
 
-def _mask_path(data_dir: Path, frame_id: str) -> str:
-    """Return the path to the mask for the specified frame ID."""
-    return os.path.join(data_dir, frame_id, "mask.npy")
+    def bbox3d(self, frame_id: str) -> Path:
+        """Return the path to the 3D bounding box for the specified frame ID."""
+        return self._data_dir / frame_id / "bbox3d.npy"
 
+    def mask(self, frame_id: str) -> Path:
+        """Return the path to the mask for the specified frame ID."""
+        return self._data_dir / frame_id / "mask.npy"
 
-def _pc_path(data_dir: Path, frame_id: str) -> str:
-    """Return the path to the point cloud for the specified frame ID."""
-    return os.path.join(data_dir, frame_id, "pc.npy")
+    def pc(self, frame_id: str) -> Path:
+        """Return the path to the point cloud for the specified frame ID."""
+        return self._data_dir / frame_id / "pc.npy"
 
-
-def _rgb_path(data_dir: Path, frame_id: str) -> str:
-    """Return the path to the RGB image for the specified frame ID."""
-    return os.path.join(data_dir, frame_id, "rgb.jpg")
-
-
-def read_image(file_path: str) -> np.ndarray:
-    """Return the image for the given frame ID."""
-    return cv2.imread(file_path)
+    def rgb(self, frame_id: str) -> Path:
+        """Return the path to the RGB image for the specified frame ID."""
+        return self._data_dir / frame_id / "rgb.jpg"
 
 
 @dataclass
@@ -54,6 +51,7 @@ class DatasetHandler(Dataset):  # type: ignore[type-arg]
     ) -> None:
         self._config = config
         self._data_dir = Path(config["dir"]).resolve()
+        self._file_paths = FilePaths(self._data_dir)
 
         self._transform = transform if transform else lambda x: x
         self._frame_ids = DatasetHandler._list_frame_ids(self._data_dir)
@@ -65,7 +63,7 @@ class DatasetHandler(Dataset):  # type: ignore[type-arg]
 
         frame_ids are the names of the subdirectories in the data directory.
         """
-        return sorted([d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))])
+        return sorted([d.name for d in path.iterdir() if d.is_dir()])
 
     def _verify_frames_files(self) -> None:
         """
@@ -74,23 +72,23 @@ class DatasetHandler(Dataset):  # type: ignore[type-arg]
         expected content: bbox3d.npy, mask.npy, pc.npy, rgb.jpg
         """
         for frame_id in self._frame_ids:
-            if not os.path.isfile(_bbox3d_path(self._data_dir, frame_id)):
+            if not self._file_paths.bbox3d(frame_id).is_file():
                 raise FileNotFoundError(f"Missing 3D bounding box for frame {frame_id}")
-            if not os.path.isfile(_mask_path(self._data_dir, frame_id)):
+            if not self._file_paths.mask(frame_id).is_file():
                 raise FileNotFoundError(f"Missing mask for frame {frame_id}")
-            if not os.path.isfile(_pc_path(self._data_dir, frame_id)):
+            if not self._file_paths.pc(frame_id).is_file():
                 raise FileNotFoundError(f"Missing point cloud for frame {frame_id}")
-            if not os.path.isfile(_rgb_path(self._data_dir, frame_id)):
+            if not self._file_paths.rgb(frame_id).is_file():
                 raise FileNotFoundError(f"Missing RGB image for frame {frame_id}")
 
     def _frame(self, idx: int) -> Frame:
         """Return the frame at the specified index."""
         frame_id = self._frame_ids[idx]
         frame = Frame(
-            rgb=read_image(_rgb_path(self._data_dir, frame_id)),
-            pc=np.load(_pc_path(self._data_dir, frame_id)),
-            mask=np.load(_mask_path(self._data_dir, frame_id)),
-            bbox3d=np.load(_bbox3d_path(self._data_dir, frame_id)),
+            rgb=cv2.imread(str(self._file_paths.rgb(frame_id))),
+            pc=np.load(self._file_paths.pc(frame_id)),
+            mask=np.load(self._file_paths.mask(frame_id)),
+            bbox3d=np.load(self._file_paths.bbox3d(frame_id)),
         )
         frame = self._transform(frame)
         return frame
