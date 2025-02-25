@@ -1,0 +1,7 @@
+log_dir:
+  local: "./logs"
+  colab: "/content/drive/MyDrive/projects/bbox_3d_prediction/logs"
+
+checkpoint_dir:
+  local:  "./checkpoints"
+  colab: "/content/drive/MyDrive/projects/bbox_3d_prediction/checkpoints"
