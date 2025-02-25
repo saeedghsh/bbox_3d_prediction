@@ -2,13 +2,12 @@
 
 # pylint: disable=no-member
 import os
+from dataclasses import dataclass
 from typing import Callable, Optional, Tuple
 
 import cv2
 import numpy as np
 from torch.utils.data import Dataset
-
-from data.data_structure import Frame
 
 
 def _bbox3d_path(data_dir: str, frame_id: str) -> str:
@@ -34,6 +33,16 @@ def _rgb_path(data_dir: str, frame_id: str) -> str:
 def read_image(file_path: str) -> np.ndarray:
     """Return the image for the given frame ID."""
     return cv2.imread(file_path)
+
+
+@dataclass
+class Frame:
+    """Frame containing multimodal data"""
+
+    rgb: np.ndarray
+    pc: np.ndarray
+    mask: np.ndarray
+    bbox3d: np.ndarray
 
 
 class DatasetHandler(Dataset):  # type: ignore[type-arg]

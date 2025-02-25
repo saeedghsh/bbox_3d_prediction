@@ -4,7 +4,7 @@ import os
 import sys
 from typing import Sequence
 
-from data.dataset_handler import DatasetHandler
+from dataset_handler.dataset_handler import DatasetHandler
 from visualization.visualization import Visualizer
 
 DATA_DIR = "dataset/dl_challenge"
