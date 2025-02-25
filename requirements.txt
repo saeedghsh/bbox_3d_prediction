@@ -11,6 +11,7 @@ albumentations
 kornia
 tensorboard
 pyyaml
+types-PyYAML
 dvc
 numpy
 opencv-python-headless

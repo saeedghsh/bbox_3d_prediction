@@ -3,29 +3,30 @@
 # pylint: disable=no-member
 import os
 from dataclasses import dataclass
-from typing import Callable, Optional, Tuple
+from pathlib import Path
+from typing import Any, Callable, Dict, Optional, Tuple
 
 import cv2
 import numpy as np
 from torch.utils.data import Dataset
 
 
-def _bbox3d_path(data_dir: str, frame_id: str) -> str:
+def _bbox3d_path(data_dir: Path, frame_id: str) -> str:
     """Return the path to the 3D bounding box for the specified frame ID."""
     return os.path.join(data_dir, frame_id, "bbox3d.npy")
 
 
-def _mask_path(data_dir: str, frame_id: str) -> str:
+def _mask_path(data_dir: Path, frame_id: str) -> str:
     """Return the path to the mask for the specified frame ID."""
     return os.path.join(data_dir, frame_id, "mask.npy")
 
 
-def _pc_path(data_dir: str, frame_id: str) -> str:
+def _pc_path(data_dir: Path, frame_id: str) -> str:
     """Return the path to the point cloud for the specified frame ID."""
     return os.path.join(data_dir, frame_id, "pc.npy")
 
 
-def _rgb_path(data_dir: str, frame_id: str) -> str:
+def _rgb_path(data_dir: Path, frame_id: str) -> str:
     """Return the path to the RGB image for the specified frame ID."""
     return os.path.join(data_dir, frame_id, "rgb.jpg")
 
@@ -48,14 +49,18 @@ class Frame:
 class DatasetHandler(Dataset):  # type: ignore[type-arg]
     """Custom dataset for multimodal data"""
 
-    def __init__(self, data_dir: str, transform: Optional[Callable[[Frame], Frame]] = None) -> None:
-        self._data_dir = data_dir
+    def __init__(
+        self, config: Dict[str, Any], transform: Optional[Callable[[Frame], Frame]] = None
+    ) -> None:
+        self._config = config
+        self._data_dir = Path(config["dir"]).resolve()
+
         self._transform = transform if transform else lambda x: x
-        self._frame_ids = DatasetHandler._list_frame_ids(data_dir)
+        self._frame_ids = DatasetHandler._list_frame_ids(self._data_dir)
         self._verify_frames_files()
 
     @staticmethod
-    def _list_frame_ids(path: str) -> list[str]:
+    def _list_frame_ids(path: Path) -> list[str]:
         """Return a list of frame IDs in the specified directory.
 
         frame_ids are the names of the subdirectories in the data directory.

@@ -2,12 +2,12 @@
 
 import os
 import sys
+from pathlib import Path
 from typing import Sequence
 
+from config.configuration_reader import read_config
 from dataset_handler.dataset_handler import DatasetHandler
 from visualization.visualization import Visualizer
-
-DATA_DIR = "dataset/dl_challenge"
 
 
 def _draw_frame(dataset_handler: DatasetHandler, visualizer: Visualizer) -> None:
@@ -36,7 +36,10 @@ def _draw_frame(dataset_handler: DatasetHandler, visualizer: Visualizer) -> None
 
 def main(_: Sequence[str]) -> int:
     """Main function: loads the dataset and visualizes the data."""
-    dataset_handler = DatasetHandler(DATA_DIR)
+    data_config_path = Path("./config/data.yaml").resolve()
+    dataset_handler_config = read_config(data_config_path)
+    dataset_handler = DatasetHandler(dataset_handler_config)
+
     visualizer = Visualizer(config={"visualize_2d": True, "visualize_3d": True})
     _draw_frame(dataset_handler, visualizer)
 

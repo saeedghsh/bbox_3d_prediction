@@ -1,0 +1,4 @@
+dir: "./dataset/dl_challenge"
+# Target resolution to resize images and point clouds if needed.
+target_height: 512
+target_width: 512
