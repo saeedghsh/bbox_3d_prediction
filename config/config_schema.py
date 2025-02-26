@@ -42,9 +42,9 @@ class BaseConfig:
 
 @dataclass
 class BackboneModelConfig(BaseConfig):
-    model_name: str
+    type: str
     in_channels: int
-    out_features: int
+    out_channels: int
     pretrained: bool
 
 

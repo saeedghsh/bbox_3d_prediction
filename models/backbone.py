@@ -17,7 +17,7 @@ class BackboneModel(nn.Module):
     def __init__(self, model: nn.Module, config: BackboneModelConfig) -> None:
         super().__init__()
         self._model = model
-        self._conv = nn.Conv2d(config.in_channels, config.out_features, kernel_size=1)
+        self._conv = nn.Conv2d(config.in_channels, config.out_channels, kernel_size=1)
 
     @property
     def backbone(self) -> nn.Module:

@@ -1,13 +1,13 @@
 model:
   backbone2d:
-    model_name: "resnet18"
+    type: "resnet18"
     in_channels: 3
-    out_features: 64
+    out_channels: 64
     pretrained: True
   backbone3d:
-    model_name: "swin_t"  # Using Swin Transformer Tiny for 3D backbone.
+    type: "swin_t"  # Using Swin Transformer Tiny for 3D backbone.
     in_channels: 3
-    out_features: 64
+    out_channels: 64
     pretrained: True
   fusion:
     out_channels: 128

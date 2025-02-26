@@ -22,7 +22,7 @@ class FusionModel(nn.Module):
     ) -> None:
         super().__init__()
         self._config = fusion_config
-        self._in_channels = backbone_2d_config.out_features + backbone_3d_config.out_features
+        self._in_channels = backbone_2d_config.out_channels + backbone_3d_config.out_channels
         self._out_channels = fusion_config.out_channels
 
         self._fusion_head = nn.Sequential(
