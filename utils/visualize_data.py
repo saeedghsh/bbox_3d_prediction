@@ -37,7 +37,7 @@ def _draw_frame(dataset_handler: DatasetHandler, visualizer: Visualizer) -> None
 
 def main(_: Sequence[str]) -> int:
     """Main function: loads the dataset and visualizes the data."""
-    data_config_path = Path("./config/data.yaml").resolve()
+    data_config_path = Path("./config/data.yaml")
     data_config = DataConfig.from_dict(read_config(data_config_path))
     dataset_handler = DatasetHandler(data_config)
 

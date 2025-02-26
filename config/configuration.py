@@ -22,7 +22,7 @@ def _resolve_colab_paths(config: Dict[str, Any]) -> Dict[str, Any]:
 
 def read_config(config_path: Path) -> Any:
     """Return the configuration at the path."""
-    with open(config_path, encoding="utf-8") as f:
+    with open(config_path.resolve(), encoding="utf-8") as f:
         config = yaml.safe_load(f)
 
     if isinstance(config, dict):
