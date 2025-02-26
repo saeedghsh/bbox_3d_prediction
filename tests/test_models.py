@@ -31,7 +31,11 @@ def model_fixture() -> DummyModel:
 def backbone_model_fixture(request: FixtureRequest) -> BackboneModel:
     model = request.getfixturevalue("model_fixture")
     config = BackboneModelConfig(
-        type="DummyModel", in_channels=32, out_channels=16, pretrained=False
+        type="DummyModel",
+        input_channels_order="chw",
+        in_channels=32,
+        out_channels=16,
+        pretrained=False,
     )
     return BackboneModel(model=model, config=config)
 
@@ -39,7 +43,7 @@ def backbone_model_fixture(request: FixtureRequest) -> BackboneModel:
 @pytest.fixture
 def fusion_model_fixture() -> FusionModel:
     backbone_config = BackboneModelConfig(
-        type="test", out_channels=16, in_channels=3, pretrained=False
+        type="test", input_channels_order="chw", in_channels=3, out_channels=16, pretrained=False
     )
     return FusionModel(
         fusion_config=FusionModelConfig(out_channels=32),

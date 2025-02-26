@@ -23,6 +23,7 @@ class BaseConfig:
 @dataclass
 class BackboneModelConfig(BaseConfig):
     type: str
+    input_channels_order: Literal["chw", "hwc"]  # c: color/coordinate, h: height, w: width
     in_channels: int
     out_channels: int
     pretrained: bool
@@ -56,6 +57,8 @@ class DataConfig(BaseConfig):
     split_test: float
     target_height: int
     target_width: int
+    rgb_channels_order: str
+    pc_channels_order: str
 
     def __post_init__(self) -> None:
         self.dataset_dir = Path(self.dataset_dir).resolve()
@@ -63,6 +66,8 @@ class DataConfig(BaseConfig):
         self.split_test = float(self.split_test)
         self.target_height = int(self.target_height)
         self.target_width = int(self.target_width)
+        self.rgb_channels_order = self.rgb_channels_order.lower()
+        self.pc_channels_order = self.pc_channels_order.lower()
 
 
 @dataclass

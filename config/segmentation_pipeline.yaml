@@ -1,16 +1,22 @@
 model:
+
   backbone2d:
     type: "resnet18"
+    input_channels_order: "chw"  # must match type (CNN->CHW / ViT->HWC), used for reshaping the input data
     in_channels: 3
     out_channels: 64
     pretrained: True
+
   backbone3d:
-    type: "swin_t"  # Using Swin Transformer Tiny for 3D backbone.
+    type: "swin_t"
+    input_channels_order: "hwc"  # must match type (CNN->CHW / ViT->HWC), used for reshaping the input data
     in_channels: 3
     out_channels: 64
     pretrained: True
+
   fusion:
     out_channels: 128
+
   segmentation:
     out_channels: 1  # One channel per object mask (binary per channel).
 
@@ -19,8 +25,8 @@ loss:
   reduction: "mean"
 
 training:
-  batch_size: 4
-  epochs: 10
+  batch_size: 1
+  epochs: 1
 
 optimizer:
   type: "Adam"
