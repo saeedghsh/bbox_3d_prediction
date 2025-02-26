@@ -1,7 +1,10 @@
 """Segmentation model that integrates 2D/3D backbones, fusion, and segmentation head."""
 
+from typing import cast
+
 from torch import Tensor, nn
 
+from config.config_schema import SegmentationModelConfig
 from models.backbone import BackboneModel
 from models.fusion import FusionModel
 
@@ -15,19 +18,24 @@ class SegmentationModel(nn.Module):
 
     def __init__(
         self,
+        segmentation_config: SegmentationModelConfig,
         backbone2d: BackboneModel,
         backbone3d: BackboneModel,
         fusion: FusionModel,
-        out_channels: int,  # segmentation's out_channels
     ) -> None:
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         super().__init__()
+        self._config = segmentation_config
+        self._in_channels = fusion.config.out_channels
+        self._out_channels = segmentation_config.out_channels
+
         self._backbone2d = backbone2d
         self._backbone3d = backbone3d
         self._fusion = fusion
         self._segmentation_head = nn.Sequential(
-            nn.Conv2d(self._fusion.out_channels, out_channels, kernel_size=3, padding=1),
+            nn.Conv2d(self._in_channels, self._out_channels, kernel_size=3, padding=1),
             nn.ReLU(),
-            nn.Conv2d(out_channels, out_channels, kernel_size=1),
+            nn.Conv2d(self._out_channels, self._out_channels, kernel_size=1),
         )
 
     @property
@@ -47,8 +55,7 @@ class SegmentationModel(nn.Module):
 
     def forward(self, image: Tensor, pointcloud: Tensor) -> Tensor:
         """Forward pass."""
-        feat2d: Tensor = self._backbone2d(image)
-        feat3d: Tensor = self._backbone3d(pointcloud)
-        fused: Tensor = self._fusion(feat2d, feat3d)
-        seg_out: Tensor = self._segmentation_head(fused)
-        return seg_out
+        feat2d = self._backbone2d(image)
+        feat3d = self._backbone3d(pointcloud)
+        fused = self._fusion(feat2d, feat3d)
+        return cast(Tensor, self._segmentation_head(fused))

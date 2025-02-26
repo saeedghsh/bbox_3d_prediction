@@ -49,6 +49,16 @@ class BackboneModelConfig(BaseConfig):
 
 
 @dataclass
+class FusionModelConfig(BaseConfig):
+    out_channels: int
+
+
+@dataclass
+class SegmentationModelConfig(BaseConfig):
+    out_channels: int
+
+
+@dataclass
 class TrainingConfig(BaseConfig):
     batch_size: int
     epochs: int

@@ -1,55 +1,61 @@
 # pylint: disable=missing-module-docstring, missing-class-docstring, missing-function-docstring
 
+from typing import cast
+
 import pytest
 import torch
 from pytest import FixtureRequest
 from torch import Tensor, nn
 
-from config.config_schema import BackboneModelConfig
+from config.config_schema import BackboneModelConfig, FusionModelConfig, SegmentationModelConfig
 from models.backbone import BackboneModel
 from models.fusion import FusionModel
 from models.segmentation import SegmentationModel
 
 
-class DummyBackbone(nn.Module):
+class DummyModel(nn.Module):
     def __init__(self, out_channels: int) -> None:
         super().__init__()
         self._conv = nn.Conv2d(3, out_channels, kernel_size=3, padding=1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        out: Tensor = self._conv(x)
-        return out
+        return cast(Tensor, self._conv(x))
 
 
 @pytest.fixture
-def backbone_fixture() -> DummyBackbone:
-    return DummyBackbone(out_channels=32)
+def model_fixture() -> DummyModel:
+    return DummyModel(out_channels=32)
 
 
 @pytest.fixture
 def backbone_model_fixture(request: FixtureRequest) -> BackboneModel:
-    backbone = request.getfixturevalue("backbone_fixture")
+    model = request.getfixturevalue("model_fixture")
     config = BackboneModelConfig(
-        model_name="DummyBackbone", in_channels=32, out_features=16, pretrained=False
+        model_name="DummyModel", in_channels=32, out_features=16, pretrained=False
     )
-    return BackboneModel(model=backbone, config=config)
+    return BackboneModel(model=model, config=config)
 
 
 @pytest.fixture
 def fusion_model_fixture() -> FusionModel:
-    return FusionModel(feat2d_channels=16, feat3d_channels=16, out_channels=32)
+    backbone_config = BackboneModelConfig(
+        model_name="test", out_features=16, in_channels=3, pretrained=False
+    )
+    return FusionModel(
+        fusion_config=FusionModelConfig(out_channels=32),
+        backbone_2d_config=backbone_config,
+        backbone_3d_config=backbone_config,
+    )
 
 
 @pytest.fixture
 def segmentation_model_fixture(request: FixtureRequest) -> SegmentationModel:
-    model2d = request.getfixturevalue("backbone_model_fixture")
-    model3d = request.getfixturevalue("backbone_model_fixture")
-    fusion = request.getfixturevalue("fusion_model_fixture")
+    segmentation_config = SegmentationModelConfig(out_channels=8)
     return SegmentationModel(
-        backbone2d=model2d,
-        backbone3d=model3d,
-        fusion=fusion,
-        out_channels=8,
+        segmentation_config=segmentation_config,
+        backbone2d=request.getfixturevalue("backbone_model_fixture"),
+        backbone3d=request.getfixturevalue("backbone_model_fixture"),
+        fusion=request.getfixturevalue("fusion_model_fixture"),
     )
 
 
