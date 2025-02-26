@@ -1,13 +1,23 @@
 """Factory module for instantiation of models."""
 
 from dataclasses import asdict
+from typing import Optional
 
 import torchvision.models as tv_models
+from torchvision.models._api import WeightsEnum
 
 from config.config_schema import BackboneModelConfig, FusionModelConfig, SegmentationModelConfig
 from models.backbone import BackboneModel
 from models.fusion import FusionModel
 from models.segmentation import SegmentationModel
+
+
+def _backbone_weights(config: BackboneModelConfig) -> Optional[WeightsEnum]:
+    weights = None
+    if config.pretrained:
+        weights_enum = getattr(tv_models, f"{config.type}_Weights", None)
+        weights = weights_enum.DEFAULT if weights_enum else None
+    return weights
 
 
 def _create_backbone_model(config: BackboneModelConfig) -> BackboneModel:
@@ -19,7 +29,8 @@ def _create_backbone_model(config: BackboneModelConfig) -> BackboneModel:
 
     if not (model_cls := getattr(tv_models, config.type, None)):
         raise ValueError(f"Invalid model name: {config.type}")
-    backbone_instance = model_cls(pretrained=config.pretrained)
+
+    backbone_instance = model_cls(weights=_backbone_weights(config))
 
     return BackboneModel(model=backbone_instance, config=config)
 
