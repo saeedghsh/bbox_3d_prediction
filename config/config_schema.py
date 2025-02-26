@@ -27,15 +27,26 @@ class BackboneModelConfig(BaseConfig):
     out_channels: int
     pretrained: bool
 
+    def __post_init__(self) -> None:
+        self.in_channels = int(self.in_channels)
+        self.out_channels = int(self.out_channels)
+        self.pretrained = bool(self.pretrained)
+
 
 @dataclass
 class FusionModelConfig(BaseConfig):
     out_channels: int
 
+    def __post_init__(self) -> None:
+        self.out_channels = int(self.out_channels)
+
 
 @dataclass
 class SegmentationModelConfig(BaseConfig):
     out_channels: int
+
+    def __post_init__(self) -> None:
+        self.out_channels = int(self.out_channels)
 
 
 @dataclass
@@ -48,6 +59,10 @@ class DataConfig(BaseConfig):
 
     def __post_init__(self) -> None:
         self.dataset_dir = Path(self.dataset_dir).resolve()
+        self.split_val = float(self.split_val)
+        self.split_test = float(self.split_test)
+        self.target_height = int(self.target_height)
+        self.target_width = int(self.target_width)
 
 
 @dataclass
@@ -64,6 +79,10 @@ class LoggingConfig(BaseConfig):
 class TrainingConfig(BaseConfig):
     batch_size: int
     epochs: int
+
+    def __post_init__(self) -> None:
+        self.batch_size = int(self.batch_size)
+        self.epochs = int(self.epochs)
 
 
 @dataclass
@@ -132,6 +151,12 @@ class OptimizerConfig(BaseConfig, ValidArgsMixin):
     betas: Tuple[float, float]
     eps: float
 
+    def __post_init__(self) -> None:
+        self.lr = float(self.lr)
+        self.weight_decay = float(self.weight_decay)
+        self.betas = tuple(float(beta) for beta in self.betas)  # type: ignore[assignment]
+        self.eps = float(self.eps)
+
 
 @dataclass
 class SchedulerConfig(BaseConfig, ValidArgsMixin):
@@ -149,3 +174,7 @@ class SchedulerConfig(BaseConfig, ValidArgsMixin):
     ]
     step_size: int
     gamma: float
+
+    def __post_init__(self) -> None:
+        self.step_size = int(self.step_size)
+        self.gamma = float(self.gamma)
