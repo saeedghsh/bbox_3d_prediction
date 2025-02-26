@@ -5,7 +5,8 @@ import torch
 from pytest import FixtureRequest
 from torch import Tensor, nn
 
-from models.backbone import Backbone2DModel, Backbone3DModel
+from config.config_schema import BackboneModelConfig
+from models.backbone import BackboneModel
 from models.fusion import FusionModel
 from models.segmentation import SegmentationModel
 
@@ -21,25 +22,17 @@ class DummyBackbone(nn.Module):
 
 
 @pytest.fixture
-def backbone2d_fixture() -> DummyBackbone:
+def backbone_fixture() -> DummyBackbone:
     return DummyBackbone(out_channels=32)
 
 
 @pytest.fixture
-def backbone3d_fixture() -> DummyBackbone:
-    return DummyBackbone(out_channels=32)
-
-
-@pytest.fixture
-def backbone2d_model_fixture(request: FixtureRequest) -> Backbone2DModel:
-    backbone2d = request.getfixturevalue("backbone2d_fixture")
-    return Backbone2DModel(backbone=backbone2d, in_channels=32, out_features=16)
-
-
-@pytest.fixture
-def backbone3d_model_fixture(request: FixtureRequest) -> Backbone3DModel:
-    backbone3d = request.getfixturevalue("backbone3d_fixture")
-    return Backbone3DModel(backbone=backbone3d, in_channels=32, out_features=16)
+def backbone_model_fixture(request: FixtureRequest) -> BackboneModel:
+    backbone = request.getfixturevalue("backbone_fixture")
+    config = BackboneModelConfig(
+        model_name="DummyBackbone", in_channels=32, out_features=16, pretrained=False
+    )
+    return BackboneModel(model=backbone, config=config)
 
 
 @pytest.fixture
@@ -49,8 +42,8 @@ def fusion_model_fixture() -> FusionModel:
 
 @pytest.fixture
 def segmentation_model_fixture(request: FixtureRequest) -> SegmentationModel:
-    model2d = request.getfixturevalue("backbone2d_model_fixture")
-    model3d = request.getfixturevalue("backbone3d_model_fixture")
+    model2d = request.getfixturevalue("backbone_model_fixture")
+    model3d = request.getfixturevalue("backbone_model_fixture")
     fusion = request.getfixturevalue("fusion_model_fixture")
     return SegmentationModel(
         backbone2d=model2d,
@@ -61,14 +54,14 @@ def segmentation_model_fixture(request: FixtureRequest) -> SegmentationModel:
 
 
 def test_backbone2d_model(request: FixtureRequest) -> None:
-    model2d = request.getfixturevalue("backbone2d_model_fixture")
+    model2d = request.getfixturevalue("backbone_model_fixture")
     input_tensor = torch.randn(2, 3, 64, 64)
     output_tensor = model2d(input_tensor)
     assert output_tensor.shape == (2, 16, 64, 64)
 
 
 def test_backbone3d_model(request: FixtureRequest) -> None:
-    model3d = request.getfixturevalue("backbone3d_model_fixture")
+    model3d = request.getfixturevalue("backbone_model_fixture")
     input_tensor = torch.randn(2, 3, 64, 64)
     output_tensor = model3d(input_tensor)
     assert output_tensor.shape == (2, 16, 64, 64)

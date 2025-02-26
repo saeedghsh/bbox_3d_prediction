@@ -41,6 +41,14 @@ class BaseConfig:
 
 
 @dataclass
+class BackboneModelConfig(BaseConfig):
+    model_name: str
+    in_channels: int
+    out_features: int
+    pretrained: bool
+
+
+@dataclass
 class TrainingConfig(BaseConfig):
     batch_size: int
     epochs: int

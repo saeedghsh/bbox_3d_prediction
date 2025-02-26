@@ -2,7 +2,7 @@
 
 from torch import Tensor, nn
 
-from models.backbone import Backbone2DModel, Backbone3DModel
+from models.backbone import BackboneModel
 from models.fusion import FusionModel
 
 
@@ -15,8 +15,8 @@ class SegmentationModel(nn.Module):
 
     def __init__(
         self,
-        backbone2d: Backbone2DModel,
-        backbone3d: Backbone3DModel,
+        backbone2d: BackboneModel,
+        backbone3d: BackboneModel,
         fusion: FusionModel,
         out_channels: int,  # segmentation's out_channels
     ) -> None:
@@ -31,12 +31,12 @@ class SegmentationModel(nn.Module):
         )
 
     @property
-    def backbone2d(self) -> Backbone2DModel:
+    def backbone2d(self) -> BackboneModel:
         """Returns the 2D backbone model."""
         return self._backbone2d
 
     @property
-    def backbone3d(self) -> Backbone3DModel:
+    def backbone3d(self) -> BackboneModel:
         """Returns the 3D backbone model."""
         return self._backbone3d
 
