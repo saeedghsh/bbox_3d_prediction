@@ -4,6 +4,7 @@
 
 import inspect
 from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Any, Callable, Dict, Literal, Tuple, Type, TypeVar
 
 T = TypeVar("T", bound="BaseConfig")
@@ -56,6 +57,18 @@ class FusionModelConfig(BaseConfig):
 @dataclass
 class SegmentationModelConfig(BaseConfig):
     out_channels: int
+
+
+@dataclass
+class DataConfig(BaseConfig):
+    dataset_dir: Path
+    split_val: float
+    split_test: float
+    target_height: int
+    target_width: int
+
+    def __post_init__(self) -> None:
+        self.dataset_dir = Path(self.dataset_dir).resolve()
 
 
 @dataclass

@@ -2,6 +2,9 @@ dataset_dir:
   local: "./dataset/dl_challenge"
   colab: "/content/drive/MyDrive/projects/bbox_3d_prediction/dataset/dl_challenge"
 
+split_val: 0.1
+split_test: 0.1
+
 # Target resolution to resize images and point clouds if needed.
 target_height: 512
 target_width: 512
