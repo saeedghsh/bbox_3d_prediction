@@ -51,6 +51,16 @@ class DataConfig(BaseConfig):
 
 
 @dataclass
+class LoggingConfig(BaseConfig):
+    log_dir: Path
+    checkpoint_dir: Path
+
+    def __post_init__(self) -> None:
+        self.log_dir = Path(self.log_dir).resolve()
+        self.checkpoint_dir = Path(self.checkpoint_dir).resolve()
+
+
+@dataclass
 class TrainingConfig(BaseConfig):
     batch_size: int
     epochs: int
