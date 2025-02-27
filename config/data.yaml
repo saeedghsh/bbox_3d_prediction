@@ -5,7 +5,7 @@ dataset_dir:
 split_val: 0.1
 split_test: 0.1
 
-rgb_channels_order: "hwc"  # from rgb.shape: (451, 706, 3)
+rgb_channels_order: "hwc" # from rgb.shape: (451, 706, 3)
 pc_channels_order: "chw" # from pc.shape: (3, 451, 706)
 
 # Target resolution to resize images and point clouds if needed.
