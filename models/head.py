@@ -7,7 +7,7 @@ from config.config_schema import HeadConfig, LayerConfig
 
 def _build_layer(config: LayerConfig) -> nn.Module:
     # Extend this map for other layer types as needed
-    layers_map = {"conv1x1": nn.Conv2d}
+    layers_map = {"Conv2d": nn.Conv2d}
     try:
         layer_cls = layers_map[config.layer_type]
     except KeyError as e:
