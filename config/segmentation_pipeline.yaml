@@ -3,63 +3,94 @@
 #       * for CNN -> "chw"
 #       * for ViT -> "hwc"
 
+# NOTE: For head_config layers, please set "in_channels" to null for the first layer.
+#       This value will be dynamically determined and replaced at runtime based
+#       on the output channels of the preceding module. Do not manually specify
+#       a value here.
+#       This does not apply to the first layer of the backbone, as the input
+#       channels are fixed by the input data.
+
 model:
-    backbone2d:
-        type: "resnet18"
-        input_channels_order: "chw"
-        in_channels: 3
-        out_channels: 64
-        pretrained: true
-        freeze_backbone: false
-        remove_head: true
-        head_config:
-            layers:
-                - type: "Conv2d"
-                  in_channels: 64
-                  out_channels: 64
-                  kernel_size: 1
-                  stride: 1
-                  padding: 0
+  backbone2d:
+    type: "resnet18"
+    input_channels_order: "chw"
+    in_channels: 3
+    out_channels: 64
+    pretrained: true
+    freeze_backbone: false
+    remove_head: true
+    head_config:
+      layers:
+        - type: "Conv2d"
+          in_channels: 64 # user is responsible for correctness and consistency
+          out_channels: 64 # user is responsible for correctness and consistency
+          kernel_size: 1
+          stride: 1
+          padding: 0
 
-    backbone3d:
-        type: "swin_t"
-        input_channels_order: "hwc"
-        in_channels: 3
-        out_channels: 64
-        pretrained: true
-        freeze_backbone: false
-        remove_head: true
-        head_config:
-            layers:
-                - type: "Conv2d"
-                  in_channels: 64
-                  out_channels: 64
-                  kernel_size: 1
-                  stride: 1
-                  padding: 0
+  backbone3d:
+    type: "swin_t"
+    input_channels_order: "hwc"
+    in_channels: 3
+    out_channels: 64
+    pretrained: true
+    freeze_backbone: false
+    remove_head: true
+    head_config:
+      layers:
+        - type: "Conv2d"
+          in_channels: 64
+          out_channels: 64
+          kernel_size: 1
+          stride: 1
+          padding: 0
 
-    fusion:
-        out_channels: 128
+  fusion:
+    out_channels: 128
+    head_config:
+      layers:
+        - type: "Conv2d"
+          in_channels: null # this value depends on the output of the backbones in fusion model
+          out_channels: 128 # user is responsible for correctness and consistency
+          kernel_size: 3
+          stride: 1
+          padding: 1
+        - type: "ReLU"
 
-    segmentation:
-        out_channels: 1 # One channel per object mask (binary per channel).
+  segmentation:
+    out_channels: 1 # One channel per object mask (binary per channel).
+    head_config:
+      layers:
+        - type: "Conv2d"
+          in_channels: null # this value depends on the output of the fusion model
+          out_channels: 1 # user is responsible for correctness and consistency
+          kernel_size: 3
+          stride: 1
+          padding: 1
+        - type: "ReLU"
+        - type: "Conv2d"
+          in_channels: 1 # user is responsible for correctness and consistency
+          out_channels: 1 # user is responsible for correctness and consistency
+          kernel_size: 1
+          stride: 1
+          padding: 0
 
 loss:
-    type: "BCEWithLogitsLoss" # BCEWithLogitsLoss for per-channel binary segmentation
-    reduction: "mean"
+  type: "BCEWithLogitsLoss" # BCEWithLogitsLoss for per-channel binary segmentation
+  reduction: "mean"
 
 training:
-    batch_size: 1
-    epochs: 1
+  batch_size: 1
+  epochs: 1
 
 optimizer:
-    type: "Adam"
-    lr: 0.001
-    weight_decay: 0.01
-    betas: [0.9, 0.999]
-    eps: 1e-08
+  type: "Adam"
+  lr: 0.001
+  weight_decay: 0.01
+  betas: [0.9, 0.999]
+  eps: 1e-08
 
 scheduler:
-    type: "StepLR"
-    step_size: 5
-    gamma: 0.1
+  type: "StepLR"
+  step_size: 5
+  gamma: 0.1

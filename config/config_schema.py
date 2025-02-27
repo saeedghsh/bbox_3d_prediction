@@ -70,17 +70,21 @@ class BackboneModelConfig(BaseConfig):  # pylint: disable=too-many-instance-attr
 @dataclass
 class FusionModelConfig(BaseConfig):
     out_channels: int
+    head_config: HeadConfig
 
     def __post_init__(self) -> None:
         self.out_channels = int(self.out_channels)
+        self.head_config: HeadConfig = {
+            "layers": [
+                LayerConfig.from_dict(layer)  # type: ignore[arg-type]
+                for layer in self.head_config.get("layers", [])
+            ]
+        }
 
 
 @dataclass
-class SegmentationModelConfig(BaseConfig):
-    out_channels: int
-
-    def __post_init__(self) -> None:
-        self.out_channels = int(self.out_channels)
+class SegmentationModelConfig(FusionModelConfig):
+    pass
 
 
 @dataclass
