@@ -7,20 +7,29 @@
 # 3D Bounding Box Prediction
 A deep learning pipeline for 3D bounding box prediction of objects from color image and point cloud data.
 
-### Install dependencies
+🚨 **Disclaimer: Experimental & Potentially Buggy**  
+This project is still a work in progress and may contain bugs or unexpected behavior.
+
+## Usage examples
+
+<details>
+<summary>Install dependencies</summary>
+
 ```bash
 sudo apt install libgtk2.0-dev pkg-config
 pip install -r requirements.txt
 ```
+</details>
 
-### Usage examples
-
-**Simple visualization of the dataset**
 ```bash
+# Simple visualization of the dataset
 python -m utils.visualize_data
 ```
 
-### Code quality checks
+## Development
+
+<details>
+<summary>Code quality checks</summary>
 
 **Linter, formatter and type check**
 ```bash
@@ -46,12 +55,16 @@ $ xvfb-run --auto-servernum pytest
 python -m cProfile -o profile.out -m entry.script
 tuna profile.out
 ```
+</details>
 
-## TODO
+<details>
+<summary>TODO</summary>
+
 **Workflow and code quality**:
 * [ ] complete test coverage
 * [ ] fix the discrepancy between local and remote execution of the `mypy`.
 * [ ] speed up github CI workflows
+</details>
 
 
 ## License
