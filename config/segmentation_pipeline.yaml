@@ -1,18 +1,42 @@
+# NOTE: input_channels_order in backbones must match model type (CNN -> "chw" / ViT -> "hwc")
+#       It is used for reshaping the input data.
+
 model:
 
   backbone2d:
     type: "resnet18"
-    input_channels_order: "chw"  # must match type (CNN->CHW / ViT->HWC), used for reshaping the input data
+    input_channels_order: "chw"
     in_channels: 3
     out_channels: 64
-    pretrained: True
+    pretrained: true
+    freeze_backbone: false
+    remove_head: true
+    head_config:
+      layers:
+        - type: "conv1x1"
+          in_channels: 64
+          out_channels: 64
+          kernel_size: 1
+          stride: 1
+          padding: 0
 
   backbone3d:
     type: "swin_t"
-    input_channels_order: "hwc"  # must match type (CNN->CHW / ViT->HWC), used for reshaping the input data
+    input_channels_order: "hwc"
     in_channels: 3
     out_channels: 64
-    pretrained: True
+    pretrained: true
+    freeze_backbone: false
+    remove_head: true
+    head_config:
+      layers:
+        - type: "conv1x1"
+          in_channels: 64
+          out_channels: 64
+          kernel_size: 1
+          stride: 1
+          padding: 0
+
 
   fusion:
     out_channels: 128

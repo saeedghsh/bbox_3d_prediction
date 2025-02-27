@@ -1,6 +1,5 @@
 """Factory module for instantiation of models."""
 
-from dataclasses import asdict
 from typing import Optional
 
 import torchvision.models as tv_models
@@ -22,16 +21,9 @@ def _backbone_weights(config: BackboneModelConfig) -> Optional[WeightsEnum]:
 
 def _create_backbone_model(config: BackboneModelConfig) -> BackboneModel:
     """Return BackboneModel instance based on configuration."""
-    required_keys = {"type", "in_channels", "out_channels", "pretrained"}
-    if not required_keys.issubset(asdict(config)):
-        missing_keys = required_keys - asdict(config).keys()
-        raise ValueError(f"Missing required config keys: {missing_keys}")
-
     if not (model_cls := getattr(tv_models, config.type, None)):
         raise ValueError(f"Invalid model name: {config.type}")
-
     backbone_instance = model_cls(weights=_backbone_weights(config))
-
     return BackboneModel(model=backbone_instance, config=config)
 
 

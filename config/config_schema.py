@@ -3,9 +3,9 @@
 # pylint: disable=missing-class-docstring
 
 import inspect
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, Literal, Tuple, Type, TypeVar
+from typing import Any, Callable, Dict, List, Literal, Tuple, Type, TypedDict, TypeVar
 
 T = TypeVar("T", bound="BaseConfig")
 
@@ -21,17 +21,50 @@ class BaseConfig:
 
 
 @dataclass
-class BackboneModelConfig(BaseConfig):
-    type: str
+class LayerConfig:
+    """Generic configuration for a layer."""
+
+    layer_type: str
+    kwargs: Dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def from_dict(cls, config: Dict[str, Any]) -> "LayerConfig":
+        """Dynamically create an instance from a dictionary."""
+        config_copy = dict(config)
+        layer_type = config_copy.pop("type")
+        return cls(layer_type=layer_type, kwargs=config_copy)
+
+
+class HeadConfig(TypedDict):
+    """Generic configuration for head."""
+
+    layers: List[LayerConfig]
+
+
+@dataclass
+class BackboneModelConfig(BaseConfig):  # pylint: disable=too-many-instance-attributes
+
+    type: str  # pretrained model name
     input_channels_order: Literal["chw", "hwc"]  # c: color/coordinate, h: height, w: width
     in_channels: int
     out_channels: int
     pretrained: bool
+    freeze_backbone: bool
+    remove_head: bool
+    head_config: HeadConfig
 
     def __post_init__(self) -> None:
         self.in_channels = int(self.in_channels)
         self.out_channels = int(self.out_channels)
         self.pretrained = bool(self.pretrained)
+        self.freeze_backbone = bool(self.freeze_backbone)
+        self.remove_head = bool(self.remove_head)
+        self.head_config: HeadConfig = {
+            "layers": [
+                LayerConfig.from_dict(layer)  # type: ignore[arg-type]
+                for layer in self.head_config.get("layers", [])
+            ]
+        }
 
 
 @dataclass
