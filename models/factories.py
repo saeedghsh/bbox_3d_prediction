@@ -17,26 +17,19 @@ model's expected output channels. This would help prevent configuration errors
 and ensure consistent behavior across FusionModel and SegmentationModel.
 """
 
-from typing import Optional
-
 import torchvision.models as tv_models
-from torchvision.models._api import WeightsEnum
 
 from config.config_schema import BackboneModelConfig, FusionModelConfig, SegmentationModelConfig
 from models.backbone import BackboneModel
 from models.fusion import FusionModel
 from models.segmentation import SegmentationModel
-from models.utils import adjust_head_config, freeze_model, headless, model_out_channels
-
-
-def _backbone_weights(config: BackboneModelConfig) -> Optional[WeightsEnum]:
-    weights = None
-    if config.pretrained:
-        weights_enum = getattr(tv_models, f"{config.type}_Weights", None)
-        weights = weights_enum.DEFAULT if weights_enum else None
-    if weights is None:
-        raise ValueError(f"Could not load weights for model: {config.type}")
-    return weights
+from models.utils import (
+    adjust_head_config,
+    freeze_model,
+    headless,
+    model_out_channels,
+    model_weights,
+)
 
 
 def _create_backbone_model(config: BackboneModelConfig) -> BackboneModel:
@@ -44,7 +37,8 @@ def _create_backbone_model(config: BackboneModelConfig) -> BackboneModel:
     if not (model_cls := getattr(tv_models, config.type.lower(), None)):
         raise ValueError(f"Invalid model name: {config.type}")
 
-    backbone_instance = model_cls(weights=_backbone_weights(config))
+    weights = model_weights(model_name=config.type) if config.pretrained else None
+    backbone_instance = model_cls(weights=weights)
     if config.remove_head:
         backbone_instance = headless(backbone_instance)
     if config.freeze_backbone:

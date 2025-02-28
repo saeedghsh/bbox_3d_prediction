@@ -67,9 +67,20 @@ Usage Guidance:
 from copy import deepcopy
 from typing import Callable, Optional, cast
 
+import torchvision.models as tv_models
 from torch import Tensor, dtype, nn
+from torchvision.models._api import WeightsEnum
 
 from config.config_schema import HeadConfig, LayerConfig
+
+
+def model_weights(model_name: str) -> WeightsEnum:
+    """Return default weights for a given model."""
+    weights_enum = getattr(tv_models, f"{model_name}_Weights", None)
+    weights = weights_enum.DEFAULT if weights_enum else None
+    if weights is None:
+        raise ValueError(f"Could not load weights for model: {model_name}")
+    return weights
 
 
 def headless(model: nn.Module) -> nn.Module:
