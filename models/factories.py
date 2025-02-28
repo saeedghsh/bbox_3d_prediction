@@ -26,9 +26,8 @@ from torchvision.models._api import WeightsEnum
 from config.config_schema import BackboneModelConfig, FusionModelConfig, SegmentationModelConfig
 from models.backbone import BackboneModel
 from models.fusion import FusionModel
-from models.head import adjust_head_config
 from models.segmentation import SegmentationModel
-from models.utils import freeze_model, headless, model_dtype, model_out_channels
+from models.utils import adjust_head_config, freeze_model, headless, model_dtype, model_out_channels
 
 
 def _backbone_weights(config: BackboneModelConfig) -> Optional[WeightsEnum]:

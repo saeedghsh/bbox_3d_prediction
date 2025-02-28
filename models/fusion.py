@@ -6,8 +6,7 @@ import torch
 from torch import Tensor, nn
 
 from config.config_schema import FusionModelConfig
-from models.head import build_head
-from models.utils import model_out_channels
+from models.utils import build_head, model_out_channels
 
 
 class FusionModel(nn.Module):

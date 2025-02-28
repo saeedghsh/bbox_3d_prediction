@@ -5,8 +5,7 @@ from typing import cast
 from torch import Tensor, nn
 
 from config.config_schema import BackboneModelConfig
-from models.head import build_head
-from models.utils import dtype_matcher, model_out_channels
+from models.utils import build_head, dtype_matcher, model_out_channels
 
 
 class BackboneModel(nn.Module):
