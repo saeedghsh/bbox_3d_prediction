@@ -28,7 +28,7 @@ from models.backbone import BackboneModel
 from models.fusion import FusionModel
 from models.head import adjust_head_config
 from models.segmentation import SegmentationModel
-from models.utils import model_dtype
+from models.utils import freeze_model, headless, model_dtype, model_out_channels
 
 
 def _backbone_weights(config: BackboneModelConfig) -> Optional[WeightsEnum]:
@@ -45,7 +45,16 @@ def _create_backbone_model(config: BackboneModelConfig) -> BackboneModel:
     """Return BackboneModel instance based on configuration."""
     if not (model_cls := getattr(tv_models, config.type.lower(), None)):
         raise ValueError(f"Invalid model name: {config.type}")
+
     backbone_instance = model_cls(weights=_backbone_weights(config))
+    if config.remove_head:
+        backbone_instance = headless(backbone_instance)
+    if config.freeze_backbone:
+        freeze_model(backbone_instance)
+
+    backbone_out_channels = model_out_channels(backbone_instance)
+    config.head_config = adjust_head_config(config.head_config, backbone_out_channels)
+
     return BackboneModel(model=backbone_instance, config=config)
 
 

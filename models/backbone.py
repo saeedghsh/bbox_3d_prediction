@@ -6,7 +6,7 @@ from torch import Tensor, nn
 
 from config.config_schema import BackboneModelConfig
 from models.head import build_head
-from models.utils import dtype_matcher, freeze_model, headless
+from models.utils import dtype_matcher
 
 
 class BackboneModel(nn.Module):
@@ -19,9 +19,7 @@ class BackboneModel(nn.Module):
     def __init__(self, model: nn.Module, config: BackboneModelConfig) -> None:
         super().__init__()
         self._config = config
-        self._backbone = headless(model) if config.remove_head else model
-        if config.freeze_backbone:
-            freeze_model(self._backbone)
+        self._backbone = model
         self._head = build_head(config.head_config)
         self._dtype_matchers = {"backbone_to_head": dtype_matcher(self._backbone, self._head)}
 

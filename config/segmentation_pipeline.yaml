@@ -24,7 +24,7 @@ model:
     head_config:
       layers:
         - type: "Conv2d"
-          in_channels: 512 # corresponding to headless resnet! user is responsible for correctness and consistency
+          in_channels: null # corresponding to headless resnet! user is responsible for correctness and consistency
           out_channels: 64 # user is responsible for correctness and consistency
           kernel_size: 1
           stride: 1
@@ -41,7 +41,7 @@ model:
     head_config:
       layers:
         - type: "Conv2d"
-          in_channels: 512 # corresponding to headless resnet! user is responsible for correctness and consistency
+          in_channels: null # corresponding to headless resnet! user is responsible for correctness and consistency
           out_channels: 64 # user is responsible for correctness and consistency
           kernel_size: 1
           stride: 1
