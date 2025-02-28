@@ -1,12 +1,10 @@
 # NOTE: input_channels_order in backbones must match model type
 #       It is used for reshaping the input data.
 
-# NOTE: For head_config layers, please set "in_channels" to null for the first layer.
+# NOTE: For head_config layers, set "in_channels" to null for the first layer.
 #       This value will be dynamically determined and replaced at runtime based
 #       on the output channels of the preceding module. Do not manually specify
 #       a value here.
-#       This does not apply to the first layer of the backbone, as the input
-#       channels are fixed by the input data.
 
 # NOTE: "model:backbone2d/3d:type: has to match (case-sensitive) the name of
 #        weights in torchvision.models (ResNet18_Weights) excluding the
@@ -17,15 +15,14 @@ model:
     type: "ResNet18"
     input_channels_order: "chw"
     in_channels: 3
-    out_channels: 64
     pretrained: true
     freeze_backbone: false
     remove_head: true
     head_config:
       layers:
         - type: "Conv2d"
-          in_channels: null # corresponding to headless resnet! user is responsible for correctness and consistency
-          out_channels: 64 # user is responsible for correctness and consistency
+          in_channels: null
+          out_channels: 64
           kernel_size: 1
           stride: 1
           padding: 0
@@ -34,51 +31,48 @@ model:
     type: "ResNet18"
     input_channels_order: "chw"
     in_channels: 3
-    out_channels: 64
     pretrained: true
     freeze_backbone: false
     remove_head: true
     head_config:
       layers:
         - type: "Conv2d"
-          in_channels: null # corresponding to headless resnet! user is responsible for correctness and consistency
-          out_channels: 64 # user is responsible for correctness and consistency
+          in_channels: null
+          out_channels: 64
           kernel_size: 1
           stride: 1
           padding: 0
 
   fusion:
-    out_channels: 128
     head_config:
       layers:
         - type: "Conv2d"
-          in_channels: null # this value depends on the output of the backbones in fusion model
-          out_channels: 128 # user is responsible for correctness and consistency
+          in_channels: null
+          out_channels: 128
           kernel_size: 3
           stride: 1
           padding: 1
         - type: "ReLU"
 
   segmentation:
-    out_channels: 1 # One channel per object mask (binary per channel).
     head_config:
       layers:
         - type: "Conv2d"
-          in_channels: null # this value depends on the output of the fusion model
-          out_channels: 1 # user is responsible for correctness and consistency
+          in_channels: null
+          out_channels: 1
           kernel_size: 3
           stride: 1
           padding: 1
         - type: "ReLU"
         - type: "Conv2d"
-          in_channels: 1 # user is responsible for correctness and consistency
-          out_channels: 1 # user is responsible for correctness and consistency
+          in_channels: 1
+          out_channels: 1
           kernel_size: 1
           stride: 1
           padding: 0
 
 loss:
-  type: "BCEWithLogitsLoss" # BCEWithLogitsLoss for per-channel binary segmentation
+  type: "BCEWithLogitsLoss"
   reduction: "mean"
 
 training:

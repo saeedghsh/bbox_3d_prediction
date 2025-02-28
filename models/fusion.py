@@ -7,6 +7,7 @@ from torch import Tensor, nn
 
 from config.config_schema import FusionModelConfig
 from models.head import build_head
+from models.utils import model_out_channels
 
 
 class FusionModel(nn.Module):
@@ -17,6 +18,7 @@ class FusionModel(nn.Module):
         super().__init__()
         self._config = config
         self._head = build_head(self._config.head_config)
+        self._out_channels = model_out_channels(self._head)
 
     @property
     def config(self) -> FusionModelConfig:
@@ -28,7 +30,7 @@ class FusionModel(nn.Module):
 
     @property
     def out_channels(self) -> int:
-        return self._config.out_channels
+        return self._out_channels
 
     def forward(self, feature_maps: List[Tensor]) -> Tensor:
         concatenated = torch.cat(feature_maps, dim=1)

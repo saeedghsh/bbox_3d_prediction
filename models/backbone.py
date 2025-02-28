@@ -6,7 +6,7 @@ from torch import Tensor, nn
 
 from config.config_schema import BackboneModelConfig
 from models.head import build_head
-from models.utils import dtype_matcher
+from models.utils import dtype_matcher, model_out_channels
 
 
 class BackboneModel(nn.Module):
@@ -21,7 +21,12 @@ class BackboneModel(nn.Module):
         self._config = config
         self._backbone = model
         self._head = build_head(config.head_config)
+        self._out_channels = model_out_channels(self._head)
         self._dtype_matchers = {"backbone_to_head": dtype_matcher(self._backbone, self._head)}
+
+    @property
+    def out_channels(self) -> int:
+        return self._out_channels
 
     @property
     def backbone(self) -> nn.Module:

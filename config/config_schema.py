@@ -47,7 +47,6 @@ class BackboneModelConfig(BaseConfig):  # pylint: disable=too-many-instance-attr
     type: str  # pretrained model name
     input_channels_order: Literal["chw", "hwc"]  # c: color/coordinate, h: height, w: width
     in_channels: int
-    out_channels: int
     pretrained: bool
     freeze_backbone: bool
     remove_head: bool
@@ -55,7 +54,6 @@ class BackboneModelConfig(BaseConfig):  # pylint: disable=too-many-instance-attr
 
     def __post_init__(self) -> None:
         self.in_channels = int(self.in_channels)
-        self.out_channels = int(self.out_channels)
         self.pretrained = bool(self.pretrained)
         self.freeze_backbone = bool(self.freeze_backbone)
         self.remove_head = bool(self.remove_head)
@@ -69,11 +67,9 @@ class BackboneModelConfig(BaseConfig):  # pylint: disable=too-many-instance-attr
 
 @dataclass
 class FusionModelConfig(BaseConfig):
-    out_channels: int
     head_config: HeadConfig
 
     def __post_init__(self) -> None:
-        self.out_channels = int(self.out_channels)
         self.head_config: HeadConfig = {
             "layers": [
                 LayerConfig.from_dict(layer)  # type: ignore[arg-type]

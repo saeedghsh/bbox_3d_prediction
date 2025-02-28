@@ -69,11 +69,11 @@ def create_segmentation_model(
     backbone2d_model = _create_backbone_model(backbone_2d_config)
     backbone3d_model = _create_backbone_model(backbone_3d_config)
 
-    fusion_in_channels = backbone_2d_config.out_channels + backbone_3d_config.out_channels
+    fusion_in_channels = backbone2d_model.out_channels + backbone3d_model.out_channels
     fusion_config.head_config = adjust_head_config(fusion_config.head_config, fusion_in_channels)
     fusion_model = FusionModel(fusion_config)
 
-    segmentation_in_channels = fusion_config.out_channels
+    segmentation_in_channels = fusion_model.out_channels
     segmentation_config.head_config = adjust_head_config(
         segmentation_config.head_config, segmentation_in_channels
     )

@@ -8,7 +8,7 @@ from config.config_schema import SegmentationModelConfig
 from models.backbone import BackboneModel
 from models.fusion import FusionModel
 from models.head import build_head
-from models.utils import dtype_matcher
+from models.utils import dtype_matcher, model_out_channels
 
 
 class SegmentationModel(nn.Module):
@@ -28,11 +28,16 @@ class SegmentationModel(nn.Module):
         self._fusion = fusion
         self._config = config
         self._segmentation_head = build_head(self._config.head_config)
+        self._out_channels = model_out_channels(self._segmentation_head)
         self._dtype_matchers = {
             "backbone2d_to_fusion": dtype_matcher(self._backbone2d.head, self._fusion.head),
             "backbone3d_to_fusion": dtype_matcher(self._backbone3d.head, self._fusion.head),
             "fusion_to_segmentation": dtype_matcher(self._fusion.head, self._segmentation_head),
         }
+
+    @property
+    def out_channels(self) -> int:
+        return self._out_channels
 
     @property
     def backbone2d(self) -> BackboneModel:
