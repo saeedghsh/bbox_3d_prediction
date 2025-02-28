@@ -5,7 +5,7 @@
 import inspect
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Literal, Tuple, Type, TypedDict, TypeVar
+from typing import Any, Callable, Dict, List, Literal, Tuple, Type, TypeVar
 
 T = TypeVar("T", bound="BaseConfig")
 
@@ -35,10 +35,21 @@ class LayerConfig:
         return cls(layer_type=layer_type, kwargs=config_copy)
 
 
-class HeadConfig(TypedDict):
+@dataclass
+class HeadConfig:
     """Generic configuration for head."""
 
     layers: List[LayerConfig]
+
+    def __post_init__(self) -> None:
+        if not self.layers:
+            raise ValueError("Head configuration must contain at least one layer.")
+        # Despite the type LayerConfig indicated for the layers attribute,
+        # the inherited from_dict method will return a dictionary. Therefore,
+        # we must manually convert it from a dictionary to a LayerConfig instance.
+        self.layers = [
+            LayerConfig.from_dict(layer) for layer in self.layers  # type: ignore[arg-type]
+        ]
 
 
 @dataclass
@@ -55,12 +66,10 @@ class BackboneModelConfig(BaseConfig):  # pylint: disable=too-many-instance-attr
         self.pretrained = bool(self.pretrained)
         self.freeze_backbone = bool(self.freeze_backbone)
         self.remove_head = bool(self.remove_head)
-        self.head_config: HeadConfig = {
-            "layers": [
-                LayerConfig.from_dict(layer)  # type: ignore[arg-type]
-                for layer in self.head_config.get("layers", [])
-            ]
-        }
+        # Despite the type HeadConfig indicated for the head_config attribute,
+        # the inherited from_dict method will return a dictionary. Therefore,
+        # we must manually convert it from a dictionary to a HeadConfig instance.
+        self.head_config = HeadConfig(layers=self.head_config["layers"])  # type: ignore[index]
 
 
 @dataclass
@@ -68,12 +77,7 @@ class FusionModelConfig(BaseConfig):
     head_config: HeadConfig
 
     def __post_init__(self) -> None:
-        self.head_config: HeadConfig = {
-            "layers": [
-                LayerConfig.from_dict(layer)  # type: ignore[arg-type]
-                for layer in self.head_config.get("layers", [])
-            ]
-        }
+        self.head_config = HeadConfig(layers=self.head_config["layers"])  # type: ignore[index]
 
 
 @dataclass

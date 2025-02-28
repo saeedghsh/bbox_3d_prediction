@@ -86,7 +86,7 @@ def _build_layer(config: LayerConfig) -> nn.Module:
 
 def build_head(config: HeadConfig) -> nn.Module:
     """Return a head module based on configuration."""
-    layers = [_build_layer(layer_cfg) for layer_cfg in config["layers"]]
+    layers = [_build_layer(layer_cfg) for layer_cfg in config.layers]
     return nn.Sequential(*layers)
 
 
@@ -103,7 +103,7 @@ def adjust_head_config(config: HeadConfig, in_channels: int) -> HeadConfig:
         A new head configuration with the first layer's in_channels set if needed.
     """
     adjusted_config = deepcopy(config)
-    layers = adjusted_config.get("layers", [])
-    if layers and layers[0].kwargs.get("in_channels") is None:
+    layers = adjusted_config.layers
+    if layers[0].kwargs.get("in_channels") is None:
         layers[0].kwargs["in_channels"] = in_channels
     return adjusted_config
