@@ -17,9 +17,8 @@ model's expected output channels. This would help prevent configuration errors
 and ensure consistent behavior across FusionModel and SegmentationModel.
 """
 
-from typing import Dict, Optional
+from typing import Optional
 
-import torch
 import torchvision.models as tv_models
 from torchvision.models._api import WeightsEnum
 
@@ -27,7 +26,7 @@ from config.config_schema import BackboneModelConfig, FusionModelConfig, Segment
 from models.backbone import BackboneModel
 from models.fusion import FusionModel
 from models.segmentation import SegmentationModel
-from models.utils import adjust_head_config, freeze_model, headless, model_dtype, model_out_channels
+from models.utils import adjust_head_config, freeze_model, headless, model_out_channels
 
 
 def _backbone_weights(config: BackboneModelConfig) -> Optional[WeightsEnum]:
@@ -78,12 +77,3 @@ def create_segmentation_model(
     )
 
     return SegmentationModel(segmentation_config, backbone2d_model, backbone3d_model, fusion_model)
-
-
-def input_dtypes(model: SegmentationModel) -> Dict[str, torch.dtype]:
-    """Return expected input dtypes for 2D and 3D backbones."""
-    dtype_2d = model_dtype(model.backbone2d.backbone)
-    dtype_3d = model_dtype(model.backbone3d.backbone)
-    if dtype_2d is None or dtype_3d is None:
-        raise ValueError(f"Could not infer Backbone dtypes - 2D: {dtype_2d} - 3D {dtype_3d}")
-    return {"2d": dtype_2d, "3d": dtype_3d}
