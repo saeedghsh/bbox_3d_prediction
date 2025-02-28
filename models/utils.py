@@ -58,4 +58,7 @@ def model_out_channels(model: nn.Module) -> int:
     if out_channels and isinstance(out_channels, int):
         return out_channels  # type: ignore
 
-    raise ValueError("Could not determine out_channels. Model might be unconventional.")
+    err_msg = "Could not determine out_channels. Model might be unconventional."
+    raise ValueError(
+        f"{err_msg}. Last layer type is: {last_layer.type}"  # type: ignore[union-attr]
+    )
