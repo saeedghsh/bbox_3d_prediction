@@ -47,9 +47,14 @@ class SegmentationModel(nn.Module):
         return self._fusion
 
     def forward(self, image: Tensor, pointcloud: Tensor) -> Tensor:
-        feature_maps = [
-            self._dtype_matchers["backbone2d_to_fusion"](self._backbone2d(image)),
-            self._dtype_matchers["backbone3d_to_fusion"](self._backbone3d(pointcloud)),
-        ]
-        fused = self._dtype_matchers["fusion_to_segmentation"](self._fusion(feature_maps))
-        return cast(Tensor, self._segmentation_head(fused))
+        feature_map_2d = self._backbone2d(image)
+        feature_map_2d = self._dtype_matchers["backbone2d_to_fusion"](feature_map_2d)
+
+        feature_map_3d = self._backbone3d(pointcloud)
+        feature_map_3d = self._dtype_matchers["backbone3d_to_fusion"](feature_map_3d)
+
+        fused = self._fusion([feature_map_2d, feature_map_3d])
+        fused = self._dtype_matchers["fusion_to_segmentation"](fused)
+
+        segmented = self._segmentation_head(fused)
+        return cast(Tensor, segmented)

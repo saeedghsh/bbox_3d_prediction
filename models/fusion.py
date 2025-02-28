@@ -31,5 +31,6 @@ class FusionModel(nn.Module):
         return self._config.out_channels
 
     def forward(self, feature_maps: List[Tensor]) -> Tensor:
-        fused = torch.cat(feature_maps, dim=1)
-        return cast(Tensor, self._head(fused))
+        concatenated = torch.cat(feature_maps, dim=1)
+        fused = self._head(concatenated)
+        return cast(Tensor, fused)

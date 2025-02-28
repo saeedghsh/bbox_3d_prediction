@@ -1,9 +1,10 @@
 """LightningDataModule handling train/validation/test splits and data loading."""
 
-from typing import Callable, Optional
+from typing import Callable, Dict, Optional, cast
 
 import numpy as np
 import pytorch_lightning as pl
+import torch
 from torch.utils.data import DataLoader, Subset, random_split
 
 from config.config_schema import BackboneModelConfig, DataConfig, TrainingConfig
@@ -23,6 +24,11 @@ def _reorder_channels(data: np.ndarray, source_order: str, target_order: str) ->
     return np.transpose(data, permutation)
 
 
+def _dtype_torch_to_numpy(dtype: torch.dtype) -> np.dtype:
+    """Converts a torch dtype to a numpy dtype."""
+    return cast(np.dtype, torch.empty(0, dtype=dtype).numpy().dtype)
+
+
 class MultimodalDataModule(pl.LightningDataModule):  # pylint: disable=too-many-instance-attributes
     """DataModule for multimodal data."""
 
@@ -32,13 +38,16 @@ class MultimodalDataModule(pl.LightningDataModule):  # pylint: disable=too-many-
         training_config: TrainingConfig,
         backbone_2d_config: BackboneModelConfig,
         backbone_3d_config: BackboneModelConfig,
+        input_dtypes: Dict[str, torch.dtype],
     ) -> None:
+        # pylint: disable=too-many-arguments, too-many-positional-arguments
         super().__init__()
         self._data_config = data_config
         self._training_config = training_config
         self._backbone_2d_config = backbone_2d_config
         self._backbone_3d_config = backbone_3d_config
         self._batch_size = training_config.batch_size
+        self._input_dtype = input_dtypes
         self._train_dataset: Subset
         self._val_dataset: Subset
         self._test_dataset: Subset
@@ -66,9 +75,14 @@ class MultimodalDataModule(pl.LightningDataModule):  # pylint: disable=too-many-
         rgb_target_order = self._backbone_2d_config.input_channels_order
         pc_target_order = self._backbone_3d_config.input_channels_order
 
+        rgb_dtype = _dtype_torch_to_numpy(self._input_dtype["2d"])
+        pc_dtype = _dtype_torch_to_numpy(self._input_dtype["3d"])
+
         def transform(frame: Frame) -> Frame:
             frame.rgb = _reorder_channels(frame.rgb, rgb_source_order, rgb_target_order)
+            frame.rgb = frame.rgb.astype(rgb_dtype)
             frame.pc = _reorder_channels(frame.pc, pc_source_order, pc_target_order)
+            frame.pc = frame.pc.astype(pc_dtype)
             return frame
 
         return transform

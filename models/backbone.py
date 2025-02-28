@@ -23,7 +23,7 @@ class BackboneModel(nn.Module):
         if config.freeze_backbone:
             freeze_model(self._backbone)
         self._head = build_head(config.head_config)
-        self._match_dtype = dtype_matcher(self._backbone, self._head)
+        self._dtype_matchers = {"backbone_to_head": dtype_matcher(self._backbone, self._head)}
 
     @property
     def backbone(self) -> nn.Module:
@@ -34,5 +34,7 @@ class BackboneModel(nn.Module):
         return self._head
 
     def forward(self, x: Tensor) -> Tensor:
-        features = self._match_dtype(self._backbone(x))
-        return cast(Tensor, self._head(features))
+        features = self._backbone(x)
+        features = self._dtype_matchers["backbone_to_head"](features)
+        features = self._head(features)
+        return cast(Tensor, features)

@@ -71,7 +71,6 @@ from config.config_schema import HeadConfig, LayerConfig
 
 
 def _build_layer(config: LayerConfig) -> nn.Module:
-    # Extend this map for other layer types as needed
     try:
         layer_cls = getattr(nn, config.layer_type)
     except AttributeError as e:
