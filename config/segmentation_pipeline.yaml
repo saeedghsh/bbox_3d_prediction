@@ -14,7 +14,6 @@ model:
   backbone2d:
     type: "ResNet18"
     input_channels_order: "chw"
-    in_channels: 3
     pretrained: true
     freeze_backbone: false
     remove_head: true
@@ -30,7 +29,6 @@ model:
   backbone3d:
     type: "ResNet18"
     input_channels_order: "chw"
-    in_channels: 3
     pretrained: true
     freeze_backbone: false
     remove_head: true
