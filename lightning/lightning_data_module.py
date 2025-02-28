@@ -38,7 +38,7 @@ class MultimodalDataModule(pl.LightningDataModule):  # pylint: disable=too-many-
         training_config: TrainingConfig,
         backbone_2d_config: BackboneModelConfig,
         backbone_3d_config: BackboneModelConfig,
-        input_dtypes: Dict[str, torch.dtype],
+        input_branches_dtype: Dict[str, torch.dtype],
     ) -> None:
         # pylint: disable=too-many-arguments, too-many-positional-arguments
         super().__init__()
@@ -47,7 +47,7 @@ class MultimodalDataModule(pl.LightningDataModule):  # pylint: disable=too-many-
         self._backbone_2d_config = backbone_2d_config
         self._backbone_3d_config = backbone_3d_config
         self._batch_size = training_config.batch_size
-        self._input_dtype = input_dtypes
+        self._input_branches_dtype = input_branches_dtype
         self._train_dataset: Subset
         self._val_dataset: Subset
         self._test_dataset: Subset
@@ -75,8 +75,8 @@ class MultimodalDataModule(pl.LightningDataModule):  # pylint: disable=too-many-
         rgb_target_order = self._backbone_2d_config.input_channels_order
         pc_target_order = self._backbone_3d_config.input_channels_order
 
-        rgb_dtype = _dtype_torch_to_numpy(self._input_dtype["2d"])
-        pc_dtype = _dtype_torch_to_numpy(self._input_dtype["3d"])
+        rgb_dtype = _dtype_torch_to_numpy(self._input_branches_dtype["2d"])
+        pc_dtype = _dtype_torch_to_numpy(self._input_branches_dtype["3d"])
 
         def transform(frame: Frame) -> Frame:
             frame.rgb = _reorder_channels(frame.rgb, rgb_source_order, rgb_target_order)
