@@ -63,7 +63,7 @@ class SegmentationLightningModule(pl.LightningModule):
     def training_step(self, batch: BatchType, batch_idx: int) -> Tensor:
         # pylint: disable=unused-argument, arguments-differ
         image, pointcloud, mask, _ = batch  # bbox3d is ignored for segmentation
-        logits = self.forward(image, pointcloud)
+        logits = self.forward([image, pointcloud])
         loss: Tensor = self._loss_fn(logits, mask)
         self.log("train_loss", loss, prog_bar=True, on_step=True, on_epoch=True)
         return loss
@@ -71,7 +71,7 @@ class SegmentationLightningModule(pl.LightningModule):
     def validation_step(self, batch: BatchType, batch_idx: int) -> Tensor:
         # pylint: disable=unused-argument, arguments-differ
         image, pointcloud, mask, _ = batch
-        logits = self.forward(image, pointcloud)
+        logits = self.forward([image, pointcloud])
         loss: Tensor = self._loss_fn(logits, mask)
         self.log("val_loss", loss, prog_bar=True, on_epoch=True)
         return loss
@@ -79,7 +79,7 @@ class SegmentationLightningModule(pl.LightningModule):
     def test_step(self, batch: BatchType, batch_idx: int) -> Tensor:
         # pylint: disable=unused-argument, arguments-differ
         image, pointcloud, mask, _ = batch
-        logits = self.forward(image, pointcloud)
+        logits = self.forward([image, pointcloud])
         loss: Tensor = self._loss_fn(logits, mask)
         self.log("test_loss", loss, prog_bar=True, on_epoch=True)
         return loss

@@ -64,14 +64,40 @@ Usage Guidance:
 
 """
 
-from copy import deepcopy
-from typing import Callable, Optional, cast
+from typing import Callable, List, Optional, Tuple, cast
 
+import torch
 import torchvision.models as tv_models
-from torch import Tensor, dtype, nn
+from torch import Tensor, nn
 from torchvision.models._api import WeightsEnum
 
-from config.config_schema import HeadConfig, LayerConfig
+from config.config_schema import LayerConfig
+
+
+class DTypeConverter(nn.Module):
+    """A layer that converts tensor dtype"""
+
+    def __init__(self, dtype: torch.dtype):
+        super().__init__()
+        self.dtype = dtype
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass."""
+        return x.to(dtype=self.dtype)
+
+
+class TensorConcatenator(nn.Module):
+    """Concatenate feature maps from multiple branches with shape validation."""
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def forward(self, tensors: List[Tensor]) -> Tensor:
+        """Forward pass."""
+        shapes = {t.shape[2:] for t in tensors}  # Extract spatial dimensions (H, W, ...)
+        if len(shapes) > 1:
+            raise ValueError(f"Inconsistent tensor shapes: {shapes}")
+        return torch.cat(tensors, dim=1)
 
 
 def model_weights(model_name: str) -> WeightsEnum:
@@ -94,7 +120,7 @@ def freeze_model(model: nn.Module) -> None:
         param.requires_grad = False
 
 
-def model_dtype(m: nn.Module) -> Optional[dtype]:
+def model_dtype(m: nn.Module) -> Optional[torch.dtype]:
     """Returns the dtype of the first parameter of the model."""
     params = list(m.parameters())
     return params[0].dtype if params else None
@@ -142,40 +168,13 @@ def model_out_channels(model: nn.Module) -> int:
     )
 
 
-def _build_layer(config: LayerConfig) -> nn.Module:
-    try:
-        layer_cls = getattr(nn, config.layer_type)
-    except AttributeError as e:
-        raise ValueError(f"Unsupported layer type: {config.layer_type}") from e
-    try:
-        layer_instance = layer_cls(**config.kwargs)
-    except Exception as e:
-        raise ValueError(
-            f"Error constructing layer {config.layer_type} with args {config.kwargs}: {e}"
-        ) from e
-    return cast(nn.Module, layer_instance)
-
-
-def build_head(config: HeadConfig) -> nn.Module:
-    """Return a head module based on configuration."""
-    layers = [_build_layer(layer_cfg) for layer_cfg in config.layers]
-    return nn.Sequential(*layers)
-
-
-def adjust_head_config(config: HeadConfig, in_channels: int) -> HeadConfig:
-    """
-    Adjusts the head configuration by setting the 'in_channels' of the first layer
-    to the provided value if it is None.
-
-    Args:
-        head_config: The original head configuration dictionary.
-        in_channels: The computed input channels from the preceding module.
-
-    Returns:
-        A new head configuration with the first layer's in_channels set if needed.
-    """
-    adjusted_config = deepcopy(config)
-    layers = adjusted_config.layers
-    if layers[0].kwargs.get("in_channels") is None:
-        layers[0].kwargs["in_channels"] = in_channels
-    return adjusted_config
+def set_in_channels(
+    layers_config: List[LayerConfig], out_channels: int
+) -> Tuple[List[LayerConfig], int]:
+    """Set in_channels for each layer in the list."""
+    for layer_config in layers_config:
+        if layer_config.type in ["Conv2d", "ConvTranspose2d"]:
+            layer_config.kwargs["in_channels"] = out_channels
+            if not (out_channels := layer_config.kwargs.get("out_channels")):  # type: ignore
+                raise ValueError(f"out_channels must be defined for {layer_config.type}")
+    return layers_config, out_channels

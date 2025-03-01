@@ -5,9 +5,30 @@
 import inspect
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Literal, Tuple, Type, TypeVar
+from typing import Any, Callable, Dict, Literal, Tuple, Type, TypeVar
 
 T = TypeVar("T", bound="BaseConfig")
+
+
+@dataclass
+class BackboneConfig:  # pylint: disable=missing-class-docstring
+    model_name: str = "ResNet18"
+    remove_head: bool = True
+    freeze_backbone: bool = True
+    pretrained: bool = True
+
+
+@dataclass
+class LayerConfig:  # pylint: disable=missing-class-docstring
+    type: Literal["Conv2d", "ReLU", "ConvTranspose2d"] = "ReLU"
+    kwargs: Dict[str, Any] = field(default_factory=dict)  # only what each layer needs/accepts
+
+    @staticmethod
+    def from_dict(config: Dict[str, Any]) -> "LayerConfig":
+        # pylint: disable=missing-function-docstring
+        config_copy = dict(config)
+        layer_type = config_copy.pop("type")
+        return LayerConfig(type=layer_type, kwargs=config_copy)
 
 
 @dataclass
@@ -18,71 +39,6 @@ class BaseConfig:
     def from_dict(cls: Type[T], config: Dict[str, Any]) -> T:
         """Dynamically create an instance from a dictionary."""
         return cls(**config)
-
-
-@dataclass
-class LayerConfig:
-    """Generic configuration for a layer."""
-
-    layer_type: str
-    kwargs: Dict[str, Any] = field(default_factory=dict)
-
-    @classmethod
-    def from_dict(cls, config: Dict[str, Any]) -> "LayerConfig":
-        """Dynamically create an instance from a dictionary."""
-        config_copy = dict(config)
-        layer_type = config_copy.pop("type")
-        return cls(layer_type=layer_type, kwargs=config_copy)
-
-
-@dataclass
-class HeadConfig:
-    """Generic configuration for head."""
-
-    layers: List[LayerConfig]
-
-    def __post_init__(self) -> None:
-        if not self.layers:
-            raise ValueError("Head configuration must contain at least one layer.")
-        # Despite the type LayerConfig indicated for the layers attribute,
-        # the inherited from_dict method will return a dictionary. Therefore,
-        # we must manually convert it from a dictionary to a LayerConfig instance.
-        self.layers = [
-            LayerConfig.from_dict(layer) for layer in self.layers  # type: ignore[arg-type]
-        ]
-
-
-@dataclass
-class BackboneModelConfig(BaseConfig):  # pylint: disable=too-many-instance-attributes
-
-    type: str  # pretrained model name
-    input_channels_order: Literal["chw", "hwc"]  # c: color/coordinate, h: height, w: width
-    pretrained: bool
-    freeze_backbone: bool
-    remove_head: bool
-    head_config: HeadConfig
-
-    def __post_init__(self) -> None:
-        self.pretrained = bool(self.pretrained)
-        self.freeze_backbone = bool(self.freeze_backbone)
-        self.remove_head = bool(self.remove_head)
-        # Despite the type HeadConfig indicated for the head_config attribute,
-        # the inherited from_dict method will return a dictionary. Therefore,
-        # we must manually convert it from a dictionary to a HeadConfig instance.
-        self.head_config = HeadConfig(layers=self.head_config["layers"])  # type: ignore[index]
-
-
-@dataclass
-class FusionModelConfig(BaseConfig):
-    head_config: HeadConfig
-
-    def __post_init__(self) -> None:
-        self.head_config = HeadConfig(layers=self.head_config["layers"])  # type: ignore[index]
-
-
-@dataclass
-class SegmentationModelConfig(FusionModelConfig):
-    pass
 
 
 @dataclass

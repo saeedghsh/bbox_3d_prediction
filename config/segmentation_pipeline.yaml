@@ -1,73 +1,97 @@
 # NOTE: input_channels_order in backbones must match model type
 #       It is used for reshaping the input data.
 
-# NOTE: For head_config layers, set "in_channels" to null for the first layer.
-#       This value will be dynamically determined and replaced at runtime based
-#       on the output channels of the preceding module. Do not manually specify
-#       a value here.
+# NOTE: "models:branches:rgb/pc:backbone:model_name: has to match
+#        (case-sensitive) the name of weights in torchvision.models
+#        (ResNet18_Weights) excluding the "_Weights" suffix.
 
-# NOTE: "model:backbone2d/3d:type: has to match (case-sensitive) the name of
-#        weights in torchvision.models (ResNet18_Weights) excluding the
-#        "_Weights" suffix.
+models:
+  branches:
+    rgb:
+      input_channels_order: "chw"
 
-model:
-  backbone2d:
-    type: "ResNet18"
-    input_channels_order: "chw"
-    pretrained: true
-    freeze_backbone: false
-    remove_head: true
-    head_config:
-      layers:
+      backbone:
+        model_name: "ResNet18"
+        pretrained: true
+        freeze_backbone: false
+        remove_head: true
+
+      head_layers:
         - type: "Conv2d"
-          in_channels: null
           out_channels: 64
           kernel_size: 1
           stride: 1
           padding: 0
 
-  backbone3d:
-    type: "ResNet18"
-    input_channels_order: "chw"
-    pretrained: true
-    freeze_backbone: false
-    remove_head: true
-    head_config:
-      layers:
+    pc:
+      input_channels_order: "chw"
+
+      backbone:
+        model_name: "ResNet18"
+        pretrained: true
+        freeze_backbone: false
+        remove_head: true
+
+      head_layers:
         - type: "Conv2d"
-          in_channels: null
           out_channels: 64
           kernel_size: 1
           stride: 1
           padding: 0
 
   fusion:
-    head_config:
-      layers:
-        - type: "Conv2d"
-          in_channels: null
-          out_channels: 128
-          kernel_size: 3
-          stride: 1
-          padding: 1
-        - type: "ReLU"
+    head_layers:
+      - type: "Conv2d"
+        in_channels: null
+        out_channels: 128
+        kernel_size: 3
+        stride: 1
+        padding: 1
+      - type: "ReLU"
+      - type: "Conv2d"
+        in_channels: 128
+        out_channels: 128
+        kernel_size: 3
+        stride: 1
+        padding: 1
+      - type: "ReLU"
 
   segmentation:
-    head_config:
-      layers:
-        - type: "Conv2d"
-          in_channels: null
-          out_channels: 1
-          kernel_size: 3
-          stride: 1
-          padding: 1
-        - type: "ReLU"
-        - type: "Conv2d"
-          in_channels: 1
-          out_channels: 1
-          kernel_size: 1
-          stride: 1
-          padding: 0
+    head_layers:
+      - type: "Conv2d"
+        in_channels: null
+        out_channels: 64
+        kernel_size: 3
+        stride: 1
+        padding: 1
+      - type: "ReLU"
+      - type: "ConvTranspose2d"
+        in_channels: 64
+        out_channels: 64
+        kernel_size: 4
+        stride: 2
+        padding: 1
+      - type: "ReLU"
+      - type: "ConvTranspose2d"
+        in_channels: 64
+        out_channels: 32
+        kernel_size: 4
+        stride: 2
+        padding: 1
+      - type: "ReLU"
+      - type: "ConvTranspose2d"
+        in_channels: 32
+        out_channels: 16
+        kernel_size: 4
+        stride: 2
+        padding: 1
+      - type: "ReLU"
+      - type: "ConvTranspose2d"
+        in_channels: 16
+        out_channels: 1
+        kernel_size: 4
+        stride: 2
+        padding: 1
 
 loss:
   type: "BCEWithLogitsLoss"

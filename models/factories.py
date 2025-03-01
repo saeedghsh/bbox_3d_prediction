@@ -17,57 +17,164 @@ model's expected output channels. This would help prevent configuration errors
 and ensure consistent behavior across FusionModel and SegmentationModel.
 """
 
-import torchvision.models as tv_models
+from typing import Dict, List, Optional, Tuple, TypedDict, cast
 
-from config.config_schema import BackboneModelConfig, FusionModelConfig, SegmentationModelConfig
-from models.backbone import BackboneModel
-from models.fusion import FusionModel
+import torch
+import torchvision.models as tv_models
+from torch import nn
+
+from config.config_schema import BackboneConfig, LayerConfig
+from models.feature_extractor import FeatureExtractor, MultiBranchFeatureExtractor
 from models.segmentation import SegmentationModel
 from models.utils import (
-    adjust_head_config,
     freeze_model,
     headless,
+    model_dtype,
     model_out_channels,
     model_weights,
+    set_in_channels,
 )
 
 
-def _create_backbone_model(config: BackboneModelConfig) -> BackboneModel:
+class BranchContainer(TypedDict, total=False):
+    """Intermediate container for branches."""
+
+    backbone: Optional[nn.Module]
+    backbone_dtype: Optional[torch.dtype]
+    head: Optional[nn.Module]
+    head_dtype: Optional[torch.dtype]
+    out_channels: int
+
+
+def _build_layer(config: LayerConfig) -> nn.Module:
+    try:
+        layer_cls = getattr(nn, config.type)
+    except AttributeError as e:
+        raise ValueError(f"Unsupported layer type: {config.type}") from e
+    try:
+        layer_instance = layer_cls(**config.kwargs)
+    except Exception as e:
+        raise ValueError(
+            f"Error constructing layer {config.type} with args {config.kwargs}: {e}"
+        ) from e
+    return cast(nn.Module, layer_instance)
+
+
+def _build_layers(config: List[LayerConfig]) -> nn.Module:
+    layers = [_build_layer(layer_config) for layer_config in config]
+    return nn.Sequential(*layers)
+
+
+def _build_head(
+    config: List[LayerConfig], out_channels: int
+) -> Tuple[Optional[nn.Module], Optional[torch.dtype], int]:
+    """Return a head module based on configuration."""
+    if len(config) == 0:
+        return None, None, out_channels
+    config, out_channels = set_in_channels(config, out_channels)
+    head = _build_layers(config)
+    dtype = model_dtype(head)
+    return head, dtype, out_channels
+
+
+def _build_backbone(
+    config: Optional[BackboneConfig], out_channels: int
+) -> Tuple[Optional[nn.Module], Optional[torch.dtype], int]:
     """Return BackboneModel instance based on configuration."""
-    if not (model_cls := getattr(tv_models, config.type.lower(), None)):
-        raise ValueError(f"Invalid model name: {config.type}")
+    if config is None:
+        return None, None, out_channels
 
-    weights = model_weights(model_name=config.type) if config.pretrained else None
-    backbone_instance = model_cls(weights=weights)
+    if not (model_cls := getattr(tv_models, config.model_name.lower(), None)):
+        raise ValueError(f"Invalid model name: {config.model_name}")
+
+    weights = model_weights(config.model_name) if config.pretrained else None
+    model: nn.Module = model_cls(weights=weights)
     if config.remove_head:
-        backbone_instance = headless(backbone_instance)
+        model = headless(model)
     if config.freeze_backbone:
-        freeze_model(backbone_instance)
-
-    backbone_out_channels = model_out_channels(backbone_instance)
-    config.head_config = adjust_head_config(config.head_config, backbone_out_channels)
-
-    return BackboneModel(model=backbone_instance, config=config)
+        freeze_model(model)
+    return model, model_dtype(model), model_out_channels(model)
 
 
-def create_segmentation_model(
-    backbone_2d_config: BackboneModelConfig,
-    backbone_3d_config: BackboneModelConfig,
-    fusion_config: FusionModelConfig,
-    segmentation_config: SegmentationModelConfig,
-) -> SegmentationModel:
-    """Return SegmentationModel instance based on configuration."""
+def _build_branch(config_branch: dict, out_channels: int) -> BranchContainer:
+    branch = BranchContainer()
+    branch["backbone"], branch["backbone_dtype"], out_channels = _build_backbone(
+        config_branch["backbone"], out_channels
+    )
+    branch["head"], branch["head_dtype"], out_channels = _build_head(
+        config_branch["head_layers"], out_channels
+    )
+    branch["out_channels"] = out_channels
+    return branch
 
-    backbone2d_model = _create_backbone_model(backbone_2d_config)
-    backbone3d_model = _create_backbone_model(backbone_3d_config)
 
-    fusion_in_channels = backbone2d_model.out_channels + backbone3d_model.out_channels
-    fusion_config.head_config = adjust_head_config(fusion_config.head_config, fusion_in_channels)
-    fusion_model = FusionModel(fusion_config)
+def _sum_branch_out_channels(branches: Dict[str, BranchContainer]) -> int:
+    # branches output will be concatenated in MultiBranchFeatureExtractor. The
+    # concatenated output will be the input for the fusion head or segmentation
+    # head (if no fusion head). Either way, whoever the next model is, its
+    # in_channels will be the sum of the out_channels of all branches
+    return sum(branch["out_channels"] for branch in branches.values())
 
-    segmentation_in_channels = fusion_model.out_channels
-    segmentation_config.head_config = adjust_head_config(
-        segmentation_config.head_config, segmentation_in_channels
+
+def _build_feature_extractors(
+    config_branches: dict, config_data: dict
+) -> Tuple[List[FeatureExtractor], int]:
+    branches: Dict[str, BranchContainer] = {}
+    for branch_name, config_branch in config_branches.items():
+        out_channels = config_data["channels"][branch_name]
+        branches[branch_name] = _build_branch(config_branch, out_channels)
+    feature_extractors = [
+        FeatureExtractor(
+            backbone=branch["backbone"],
+            backbone_dtype=branch["backbone_dtype"],
+            head=branch["head"],
+            head_dtype=branch["head_dtype"],
+        )
+        for branch in branches.values()
+    ]
+    out_channels = _sum_branch_out_channels(branches)
+    return feature_extractors, out_channels
+
+
+def build_segmentation_model(config: dict) -> SegmentationModel:
+    """
+    1: SegmentationModel
+    1.1: instantiate MultiBranchFeatureExtractor
+    1.1.1: instantiate branches FeatureExtractor
+    1.1.1.1: per branch: construct the branch backbone
+    1.1.1.2: per branch: construct the branch head
+    1.1.1.3: per branch: instantiate FeatureExtractor for each
+    1.1.2: construct fusion head
+    1.1.3: construct MultiBranchFeatureExtractor
+    1.2: construct segmentation head
+    1.3: instantiate SegmentationModel
+    """
+
+    # build List[FeatureExtractor]
+    feature_extractors, out_channels = _build_feature_extractors(
+        config_branches=config["models"]["branches"],
+        config_data=config["data"],
     )
 
-    return SegmentationModel(segmentation_config, backbone2d_model, backbone3d_model, fusion_model)
+    # build MultiBranchFeatureExtractor
+    fusion_head, fusion_head_dtype, out_channels = _build_head(
+        config=config["models"]["fusion"]["head_layers"],
+        out_channels=out_channels,
+    )
+    multi_branch_feature_extractor = MultiBranchFeatureExtractor(
+        branches=feature_extractors,
+        head=fusion_head,
+        head_dtype=fusion_head_dtype,
+    )
+
+    # build SegmentationModel
+    segmentation_head, segmentation_head_dtype, out_channels = _build_head(
+        config=config["models"]["segmentation"]["head_layers"],
+        out_channels=out_channels,
+    )
+    segmentation_model = SegmentationModel(
+        multi_branch_feature_extractor=multi_branch_feature_extractor,
+        head=segmentation_head,
+        head_dtype=segmentation_head_dtype,
+    )
+    return segmentation_model
