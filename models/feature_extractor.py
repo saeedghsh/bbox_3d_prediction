@@ -1,6 +1,6 @@
 """Feature extraction models."""
 
-from typing import List, Optional, Tuple, cast
+from typing import List, Optional, cast
 
 import torch
 from torch import Tensor, nn
@@ -8,31 +8,37 @@ from torch import Tensor, nn
 from models.utils import DTypeConverter, TensorConcatenator
 
 
-def build_layers(model: Optional[nn.Module], model_dtype: Optional[torch.dtype]) -> List[nn.Module]:
-    """Return a list with dtype converter followed by model.
-
-    If either is None, the corresponding layer is not added."""
-    layers: List[nn.Module] = []
-    if model is not None:
-        if model_dtype is not None:
-            layers.append(DTypeConverter(model_dtype))
-        layers.append(model)
-    return layers
-
-
-class StackedModel(nn.Module):
+class FeatureExtractor(nn.Module):
     """A model that extracts features from an input tensor with optional dtype conversion."""
 
-    def __init__(self, models: List[Tuple[Optional[nn.Module], Optional[torch.dtype]]]) -> None:
+    def __init__(
+        self,
+        backbone: Optional[nn.Module],
+        backbone_dtype: Optional[torch.dtype],
+        head: Optional[nn.Module],
+        head_dtype: Optional[torch.dtype],
+    ) -> None:
         super().__init__()
-        layers: List[nn.Module] = [
-            layer for model, dtype in models for layer in build_layers(model, dtype)
-        ]
-        self._model = nn.Sequential(*layers) if layers else nn.Identity()
+
+        backbone_layers: List[nn.Module] = []
+        if backbone is not None:
+            if backbone_dtype is not None:
+                backbone_layers.append(DTypeConverter(backbone_dtype))
+            backbone_layers.append(backbone)
+        self._backbone = nn.Sequential(*backbone_layers) if backbone_layers else nn.Identity()
+
+        head_layers: List[nn.Module] = []
+        if head is not None:
+            if head_dtype is not None:
+                head_layers.append(DTypeConverter(head_dtype))
+            head_layers.append(head)
+        self._head = nn.Sequential(*head_layers) if head_layers else nn.Identity()
 
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass."""
-        return cast(Tensor, self._model(x))
+        x = self._backbone(x)
+        x = self._head(x)
+        return x
 
 
 class MultiBranchFeatureExtractor(nn.Module):
@@ -40,7 +46,7 @@ class MultiBranchFeatureExtractor(nn.Module):
 
     def __init__(
         self,
-        branches: List[StackedModel],
+        branches: List[FeatureExtractor],
         head: Optional[nn.Module],
         head_dtype: Optional[torch.dtype],
     ):
