@@ -99,3 +99,32 @@ class DatasetHandler(Dataset):  # type: ignore[type-arg]
         """Return the RGB image, point cloud, mask, and 3D bounding box for the specified index"""
         frame = self._frame(idx)
         return frame.rgb, frame.pc, frame.mask, frame.bbox3d
+
+
+def _reorder_channels(data: np.ndarray, source_order: str, target_order: str) -> np.ndarray:
+    """Reorders the axes of the input data from source_order to target_order.
+
+    source_order: The current axis order as a string (e.g., "hwc", "chw").
+    target_order: The desired axis order as a string (e.g., "chw", "hwc").
+    """
+    if set(source_order) != set(target_order):
+        raise ValueError(f"Incompatible source and target orders: {source_order} -> {target_order}")
+
+    permutation = tuple(source_order.index(axis) for axis in target_order)
+    return np.transpose(data, permutation)
+
+
+def build_transform(
+    rgb_source_order: str = "whc",  # data
+    pc_source_order: str = "chw",  # data
+    rgb_target_order: str = "chw",  # model in
+    pc_target_order: str = "chw",  # model in
+) -> Callable[[Frame], Frame]:
+    """Builds a transform function to reorder input shapes based on model requirements."""
+
+    def transform(frame: Frame) -> Frame:
+        frame.rgb = _reorder_channels(frame.rgb, rgb_source_order, rgb_target_order)
+        frame.pc = _reorder_channels(frame.pc, pc_source_order, pc_target_order)
+        return frame
+
+    return transform

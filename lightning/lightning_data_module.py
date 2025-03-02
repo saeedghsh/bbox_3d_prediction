@@ -1,13 +1,12 @@
 """LightningDataModule handling train/validation/test splits and data loading."""
 
-from typing import Callable, Dict, Optional
+from typing import Dict, Optional
 
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader, Subset, random_split
 
 from config.config_schema import DataConfig, TrainingConfig
-from dataset_handler.dataset_handler import DatasetHandler, Frame
-from lightning.utils import reorder_channels
+from dataset_handler.dataset_handler import DatasetHandler, build_transform
 
 
 class MultimodalDataModule(pl.LightningDataModule):  # pylint: disable=too-many-instance-attributes
@@ -36,7 +35,13 @@ class MultimodalDataModule(pl.LightningDataModule):  # pylint: disable=too-many-
     def setup(self, stage: Optional[str] = None) -> None:  # pylint: disable=unused-argument
         """Set up datasets and define transforms based on model input requirements."""
         full_dataset = DatasetHandler(
-            data_dir=self._data_config.dataset_dir, transform=self._build_transform()
+            data_dir=self._data_config.dataset_dir,
+            transform=build_transform(
+                rgb_source_order=self._data_channels_order["rgb"],
+                pc_source_order=self._data_channels_order["pc"],
+                rgb_target_order=self._backbone_channels_order["rgb"],
+                pc_target_order=self._backbone_channels_order["pc"],
+            ),
         )
 
         dataset_len = len(full_dataset)
@@ -47,20 +52,6 @@ class MultimodalDataModule(pl.LightningDataModule):  # pylint: disable=too-many-
         self._train_dataset, self._val_dataset, self._test_dataset = random_split(
             full_dataset, [train_size, val_size, test_size]
         )
-
-    def _build_transform(self) -> Callable[[Frame], Frame]:
-        """Builds a transform function to reorder input shapes based on model requirements."""
-        rgb_source_order = self._data_channels_order["rgb"]
-        pc_source_order = self._data_channels_order["pc"]
-        rgb_target_order = self._backbone_channels_order["rgb"]
-        pc_target_order = self._backbone_channels_order["pc"]
-
-        def transform(frame: Frame) -> Frame:
-            frame.rgb = reorder_channels(frame.rgb, rgb_source_order, rgb_target_order)
-            frame.pc = reorder_channels(frame.pc, pc_source_order, pc_target_order)
-            return frame
-
-        return transform
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
