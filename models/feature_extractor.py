@@ -25,7 +25,6 @@ class StackedModel(nn.Module):
 
     def __init__(self, models: List[Tuple[Optional[nn.Module], Optional[torch.dtype]]]) -> None:
         super().__init__()
-
         layers: List[nn.Module] = [
             layer for model, dtype in models for layer in build_layers(model, dtype)
         ]

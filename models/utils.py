@@ -114,9 +114,9 @@ def get_tv_model(model_name: str, sub_module_name: str = "", pretrained: bool = 
     return cast(nn.Module, model_cls(weights=weights))
 
 
-def headless(model: nn.Module) -> nn.Module:
-    """Returns a model without the last layer."""
-    return cast(nn.Module, nn.Sequential(*list(model.children())[:-1]))
+def remove_head(model: nn.Module, layer_counts: int = 1) -> nn.Module:
+    """Returns a model without the last layer(s)."""
+    return cast(nn.Module, nn.Sequential(*list(model.children())[:-layer_counts]))
 
 
 def freeze_model(model: nn.Module) -> None:

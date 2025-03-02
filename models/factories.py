@@ -25,9 +25,9 @@ from models.predictor import Predictor
 from models.utils import (
     freeze_model,
     get_tv_model,
-    headless,
     model_dtype,
     model_out_channels,
+    remove_head,
     set_in_channels,
 )
 
@@ -81,7 +81,11 @@ def build_backbone(
         return None, None, out_channels
     model = get_tv_model(config.model_name, config.sub_module, config.pretrained)
     if config.remove_head:
-        model = headless(model)
+        backbone = getattr(model, "backbone", None)
+        if backbone is None:
+            print("WARNING: Model does not have a backbone attribute, removing head instead.")
+            backbone = remove_head(model)
+        model = backbone
     if config.freeze_backbone:
         freeze_model(model)
     return model, model_dtype(model), model_out_channels(model)
