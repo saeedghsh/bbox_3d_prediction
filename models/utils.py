@@ -47,12 +47,12 @@ MultiBranchFeatureExtractor):
   model-specific implementations.
 """
 
+from types import ModuleType
 from typing import Callable, List, Optional, Tuple, cast
 
 import torch
 import torchvision.models as tv_models
 from torch import Tensor, nn
-from torchvision.models._api import WeightsEnum
 
 from config.config_schema import LayerConfig
 
@@ -83,13 +83,35 @@ class TensorConcatenator(nn.Module):
         return torch.cat(tensors, dim=1)
 
 
-def model_weights(model_name: str) -> WeightsEnum:
-    """Return default weights for a given model."""
-    weights_enum = getattr(tv_models, f"{model_name}_Weights", None)
-    weights = weights_enum.DEFAULT if weights_enum else None
-    if weights is None:
-        raise ValueError(f"Could not load weights for model: {model_name}")
-    return weights
+def _get_tv_models_sub_module(sub_module_name: str = "") -> ModuleType:
+    """Return a torchvision sub-module by name, torchvision itself is name is empty."""
+    sub_module = tv_models
+    if sub_module_name:
+        try:
+            sub_module = getattr(tv_models, sub_module_name)
+        except AttributeError as e:
+            raise ValueError(f"Invalid sub_module name: {sub_module_name}: {e}") from e
+    return cast(ModuleType, sub_module)
+
+
+def get_tv_model(model_name: str, sub_module_name: str = "", pretrained: bool = True) -> nn.Module:
+    """Return a torchvision model by name."""
+    sub_module = _get_tv_models_sub_module(sub_module_name)
+
+    try:
+        model_cls = getattr(sub_module, model_name.lower())
+    except AttributeError as e:
+        raise ValueError(f"Invalid model name: {model_name.lower()}: {e}") from e
+
+    weights = None
+    if pretrained:
+        try:
+            weights_enum = getattr(sub_module, f"{model_name}_Weights")
+            weights = weights_enum.DEFAULT
+        except AttributeError as e:
+            raise ValueError(f"Could not load weights for model: {model_name}: {e}") from e
+
+    return cast(nn.Module, model_cls(weights=weights))
 
 
 def headless(model: nn.Module) -> nn.Module:

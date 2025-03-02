@@ -17,7 +17,6 @@ adjustments.
 from typing import Dict, List, Optional, Tuple, TypedDict, cast
 
 import torch
-import torchvision.models as tv_models
 from torch import nn
 
 from config.config_schema import BackboneConfig, LayerConfig
@@ -25,10 +24,10 @@ from models.feature_extractor import FeatureExtractor, MultiBranchFeatureExtract
 from models.predictor import Predictor
 from models.utils import (
     freeze_model,
+    get_tv_model,
     headless,
     model_dtype,
     model_out_channels,
-    model_weights,
     set_in_channels,
 )
 
@@ -80,12 +79,7 @@ def _build_backbone(
     """Return BackboneModel instance based on configuration."""
     if config is None:
         return None, None, out_channels
-
-    if not (model_cls := getattr(tv_models, config.model_name.lower(), None)):
-        raise ValueError(f"Invalid model name: {config.model_name}")
-
-    weights = model_weights(config.model_name) if config.pretrained else None
-    model: nn.Module = model_cls(weights=weights)
+    model = get_tv_model(config.model_name, config.sub_module, config.pretrained)
     if config.remove_head:
         model = headless(model)
     if config.freeze_backbone:

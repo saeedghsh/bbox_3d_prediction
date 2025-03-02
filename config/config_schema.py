@@ -13,6 +13,7 @@ T = TypeVar("T", bound="BaseConfig")
 @dataclass
 class BackboneConfig:  # pylint: disable=missing-class-docstring
     model_name: str = "ResNet18"
+    sub_module: str = ""
     remove_head: bool = True
     freeze_backbone: bool = True
     pretrained: bool = True

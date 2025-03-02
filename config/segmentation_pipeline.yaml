@@ -12,6 +12,7 @@ models:
 
       backbone:
         model_name: "ResNet18"
+        sub_module: ""
         pretrained: true
         freeze_backbone: false
         remove_head: true
@@ -33,6 +34,7 @@ models:
 
       backbone:
         model_name: "ResNet18"
+        sub_module: ""
         pretrained: true
         freeze_backbone: false
         remove_head: true
