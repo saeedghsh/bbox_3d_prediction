@@ -37,6 +37,8 @@ class FeatureExtractor(nn.Module):
     def forward(self, x: Tensor) -> Tensor:
         """Forward pass."""
         x = self._backbone(x)
+        if isinstance(x, dict):  # handling output of backbone if returns a dict
+            x = x["0"]
         x = self._head(x)
         return x
 
