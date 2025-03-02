@@ -42,14 +42,12 @@ models:
   fusion:
     head_layers:
       - type: "Conv2d"
-        in_channels: null
         out_channels: 128
         kernel_size: 3
         stride: 1
         padding: 1
       - type: "ReLU"
       - type: "Conv2d"
-        in_channels: 128
         out_channels: 128
         kernel_size: 3
         stride: 1
@@ -59,35 +57,30 @@ models:
   segmentation:
     head_layers:
       - type: "Conv2d"
-        in_channels: null
         out_channels: 64
         kernel_size: 3
         stride: 1
         padding: 1
       - type: "ReLU"
       - type: "ConvTranspose2d"
-        in_channels: 64
         out_channels: 64
         kernel_size: 4
         stride: 2
         padding: 1
       - type: "ReLU"
       - type: "ConvTranspose2d"
-        in_channels: 64
         out_channels: 32
         kernel_size: 4
         stride: 2
         padding: 1
       - type: "ReLU"
       - type: "ConvTranspose2d"
-        in_channels: 32
         out_channels: 16
         kernel_size: 4
         stride: 2
         padding: 1
       - type: "ReLU"
       - type: "ConvTranspose2d"
-        in_channels: 16
         out_channels: 1
         kernel_size: 4
         stride: 2
