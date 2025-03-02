@@ -5,63 +5,46 @@ Head Configuration Design Notes
 --------------------------------
 
 This module implements a generic mechanism for building “head” modules from
-configuration files. The intent is to support FusionModel and SegmentationModel
-(and potentially others) by allowing the head to be defined entirely in a YAML
-config.
+configuration files. The intent is to support any Model with a head by allowing
+the head to be defined entirely in a YAML config.
 
 Key Design Decisions:
 ---------------------
-1. Dynamic Channel Assignment: - The first layer in the head config should have
-   its 'in_channels' set to null (None in Python).
-     This signals that the value must be determined dynamically at runtime based
-     on the output channels of the preceding module (e.g., the fusion input
-     channels computed from the 2D and 3D backbones).
-   - It is the responsibility of the caller (e.g. FusionModel or
-     SegmentationModel) to override this null value with the appropriate
-     computed channel count.
+1. Dynamic Channel Assignment: No first layer in the head config should have its
+   'in_channels' set. This signals that the value must be determined dynamically
+   at runtime based on the output channels of the preceding module channels,
+   starting from data channels.
 
-2. Output Channel Consistency: - The last layer's 'out_channels' in the head
-   configuration should match the desired output channels
-     of the overall model (fusion or segmentation). Users must ensure
-     consistency manually in the YAML config.
-   - This approach minimizes over-engineering and assumes that users setting up
-     the config are aware of the necessary channel sizes.
+2. Output Channel Consistency: The 'out_channels' of the last layer of the last
+   model in inference pipeline should match the desired output channels. Users
+   must ensure consistency manually in the YAML config, as part of model
+   architecture design. This approach minimizes over-engineering and assumes
+   that users setting up the config are aware of the necessary channel sizes.
 
-3. Generic Configuration: - The head configuration is defined generically using
-   a list of layer definitions (each with a 'type'
-     and arbitrary kwargs). This enables flexibility for various layer types
-     without hard-coding logic.
-   - Currently, no automatic propagation of channel sizes is performed between
-     layers. Future improvements could add validation or automated inference of
-     intermediate channel sizes.
-
-4. Future Enhancements: - Optional validation checks can be added to verify that
-   the first layer's in_channels is properly replaced
-     at runtime and that the final layer's out_channels matches the expected
-     value.
-   - Additional layer types and more complex configurations may be supported by
-     extending the `layers_map` in the build_head function.
+3. Generic Configuration: The head configuration is defined generically using a
+   list of layer definitions (each with a 'type' and arbitrary kwargs). This
+   enables flexibility for various layer types without hard-coding logic.
+   Currently, an automatic propagation of channel sizes is performed between
+   layers. Future improvements should add validation of intermediate channel
+   sizes, and in and out channel sizes of the whole model.
 
 Usage Guidance:
 ---------------
-- Place your head configuration under the appropriate model section in your YAML
-  config file. For example, for FusionModel:
+config file. For example, for fusion (used as head in
+MultiBranchFeatureExtractor):
 
-      model:
-        fusion:
-          out_channels: 128 head_config:
-            layers:
-              - type: "Conv2d" in_channels: null out_channels: 128 kernel_size:
-                3 stride: 1 padding: 1
-              - type: "ReLU"
+    model: fusion:
+        head_layers:
+            - type: "Conv2d"
+              out_channels: 128
+              kernel_size: 3
+              stride: 1
+              padding: 1
+            - type: "ReLU"
 
-- Ensure that you manually set the out_channels for layers where necessary, and
-  leave the first layer's in_channels as null so that the model code can
-  dynamically set it.
+- Ensure that you manually set the out_channels for layers as necessary.
 - This module is designed to keep head-building logic decoupled from
-  model-specific implementations. Similar mechanisms are used for BackboneModel,
-  FusionModel, and SegmentationModel to maintain consistency.
-
+  model-specific implementations.
 """
 
 from typing import Callable, List, Optional, Tuple, cast

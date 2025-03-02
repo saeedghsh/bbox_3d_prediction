@@ -3,18 +3,15 @@
 Immutable Configs:
 ------------------
 Please note that configuration objects may be mutated during the model creation
-process (e.g., adjusting head_config's first layer in_channels based on dynamic
+process (e.g., adjusting head config's first layer in_channels based on dynamic
 channel computation). If you need to reuse configuration objects or expect them
 to remain unchanged, consider using deep copies. Future versions may enforce
 immutability through explicit validation.
 
 Error Handling & Validation:
 ----------------------------
-Future improvements should include validation checks after head_config
-adjustments. For example, verifying that the first layer's in_channels matches
-the computed value and that the last layer's out_channels is consistent with the
-model's expected output channels. This would help prevent configuration errors
-and ensure consistent behavior across FusionModel and SegmentationModel.
+Future improvements should include validation checks after head config layers'
+adjustments.
 """
 
 from typing import Dict, List, Optional, Tuple, TypedDict, cast
