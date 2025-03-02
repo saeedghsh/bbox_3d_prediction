@@ -1,34 +1,13 @@
 """PyTorch Lightning Module for segmentation."""
 
-from typing import Any, Dict, Iterator, Tuple, cast
+from typing import Any, Dict, Tuple, cast
 
 import pytorch_lightning as pl
-from torch import Tensor, nn, optim
+from torch import Tensor
 
 from config.config_schema import LossConfig, OptimizerConfig, SchedulerConfig, TrainingConfig
+from lightning.utils import instantiate_loss, instantiate_optimizer, instantiate_scheduler
 from models.predictor import Predictor
-
-
-def _instantiate_loss(config: LossConfig) -> nn.Module:
-    loss_fn_cls = getattr(nn, config.type)
-    loss_fn_args = config.keep_valid_args(loss_fn_cls)
-    return loss_fn_cls(**loss_fn_args)  # type: ignore
-
-
-def _instantiate_optimizer(
-    config: OptimizerConfig, parameters: Iterator[nn.Parameter]
-) -> optim.Optimizer:
-    optimizer_cls = getattr(optim, config.type)
-    optimizer_args = config.keep_valid_args(optimizer_cls)
-    return optimizer_cls(parameters, **optimizer_args)  # type: ignore
-
-
-def _instantiate_scheduler(
-    config: SchedulerConfig, optimizer: optim.Optimizer
-) -> optim.lr_scheduler._LRScheduler:
-    scheduler_cls = getattr(optim.lr_scheduler, config.type)
-    scheduler_args = config.keep_valid_args(scheduler_cls)
-    return scheduler_cls(optimizer, **scheduler_args)  # type: ignore
 
 
 class SegmentationLightningModule(pl.LightningModule):
@@ -54,7 +33,7 @@ class SegmentationLightningModule(pl.LightningModule):
         self._training_config = training_config
         self._optimizer_config = optimizer_config
         self._scheduler_config = scheduler_config
-        self._loss_fn = _instantiate_loss(loss_config)
+        self._loss_fn = instantiate_loss(loss_config)
 
     def forward(self, *args: Any, **kwargs: Any) -> Tensor:
         """Forward pass through the segmentation model."""
@@ -85,8 +64,8 @@ class SegmentationLightningModule(pl.LightningModule):
         return loss
 
     def configure_optimizers(self) -> Dict[str, Any]:  # type: ignore
-        optimizer = _instantiate_optimizer(self._optimizer_config, self.parameters())
-        scheduler = _instantiate_scheduler(self._scheduler_config, optimizer)
+        optimizer = instantiate_optimizer(self._optimizer_config, self.parameters())
+        scheduler = instantiate_scheduler(self._scheduler_config, optimizer)
         return {
             "optimizer": optimizer,
             "lr_scheduler": {"scheduler": scheduler, "interval": "epoch"},
