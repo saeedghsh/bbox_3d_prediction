@@ -73,7 +73,7 @@ def _build_head(
     return head, dtype, out_channels
 
 
-def _build_backbone(
+def build_backbone(
     config: Optional[BackboneConfig], out_channels: int
 ) -> Tuple[Optional[nn.Module], Optional[torch.dtype], int]:
     """Return BackboneModel instance based on configuration."""
@@ -89,7 +89,7 @@ def _build_backbone(
 
 def _build_branch(config_branch: dict, out_channels: int) -> BranchContainer:
     branch = BranchContainer()
-    branch["backbone"], branch["backbone_dtype"], out_channels = _build_backbone(
+    branch["backbone"], branch["backbone_dtype"], out_channels = build_backbone(
         config_branch["backbone"], out_channels
     )
     branch["head"], branch["head_dtype"], out_channels = _build_head(
