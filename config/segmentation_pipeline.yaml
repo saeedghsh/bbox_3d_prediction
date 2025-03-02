@@ -17,11 +17,16 @@ models:
         remove_head: true
 
       head_layers:
-        - type: "Conv2d"
-          out_channels: 64
-          kernel_size: 1
-          stride: 1
-          padding: 0
+        - type: "ConvTranspose2d"
+          out_channels: 256
+          kernel_size: 4
+          stride: 2
+          padding: 1
+        - type: "ConvTranspose2d"
+          out_channels: 128
+          kernel_size: 4
+          stride: 2
+          padding: 1
 
     pc:
       input_channels_order: "chw"
@@ -33,11 +38,16 @@ models:
         remove_head: true
 
       head_layers:
-        - type: "Conv2d"
-          out_channels: 64
-          kernel_size: 1
-          stride: 1
-          padding: 0
+        - type: "ConvTranspose2d"
+          out_channels: 256
+          kernel_size: 4
+          stride: 2
+          padding: 1
+        - type: "ConvTranspose2d"
+          out_channels: 128
+          kernel_size: 4
+          stride: 2
+          padding: 1
 
   fusion:
     head_layers:
@@ -54,12 +64,12 @@ models:
         padding: 1
       - type: "ReLU"
 
-  segmentation:
+  predictor:
     head_layers:
-      - type: "Conv2d"
-        out_channels: 64
-        kernel_size: 3
-        stride: 1
+      - type: "ConvTranspose2d"
+        out_channels: 128
+        kernel_size: 4
+        stride: 2
         padding: 1
       - type: "ReLU"
       - type: "ConvTranspose2d"
@@ -81,11 +91,10 @@ models:
         padding: 1
       - type: "ReLU"
       - type: "ConvTranspose2d"
-        out_channels: 1
+        out_channels: 8
         kernel_size: 4
         stride: 2
         padding: 1
-
 loss:
   type: "BCEWithLogitsLoss"
   reduction: "mean"

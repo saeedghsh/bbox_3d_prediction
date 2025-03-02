@@ -22,7 +22,7 @@ from torch import nn
 
 from config.config_schema import BackboneConfig, LayerConfig
 from models.feature_extractor import FeatureExtractor, MultiBranchFeatureExtractor
-from models.segmentation import SegmentationModel
+from models.predictor import Predictor
 from models.utils import (
     freeze_model,
     headless,
@@ -107,7 +107,7 @@ def _build_branch(config_branch: dict, out_channels: int) -> BranchContainer:
 
 def _sum_branch_out_channels(branches: Dict[str, BranchContainer]) -> int:
     # branches output will be concatenated in MultiBranchFeatureExtractor. The
-    # concatenated output will be the input for the fusion head or segmentation
+    # concatenated output will be the input for the fusion head or predictor
     # head (if no fusion head). Either way, whoever the next model is, its
     # in_channels will be the sum of the out_channels of all branches
     return sum(branch["out_channels"] for branch in branches.values())
@@ -133,9 +133,9 @@ def _build_feature_extractors(
     return feature_extractors, out_channels
 
 
-def build_segmentation_model(config: dict) -> SegmentationModel:
+def build_predictor_model(config: dict) -> Predictor:
     """
-    1: SegmentationModel
+    1: Predictor
     1.1: instantiate MultiBranchFeatureExtractor
     1.1.1: instantiate branches FeatureExtractor
     1.1.1.1: per branch: construct the branch backbone
@@ -143,8 +143,8 @@ def build_segmentation_model(config: dict) -> SegmentationModel:
     1.1.1.3: per branch: instantiate FeatureExtractor for each
     1.1.2: construct fusion head
     1.1.3: construct MultiBranchFeatureExtractor
-    1.2: construct segmentation head
-    1.3: instantiate SegmentationModel
+    1.2: construct predictor head
+    1.3: instantiate Predictor
     """
 
     # build List[FeatureExtractor]
@@ -164,14 +164,14 @@ def build_segmentation_model(config: dict) -> SegmentationModel:
         head_dtype=fusion_head_dtype,
     )
 
-    # build SegmentationModel
-    segmentation_head, segmentation_head_dtype, out_channels = _build_head(
-        config=config["models"]["segmentation"]["head_layers"],
+    # build Predictor
+    predictor_head, predictor_head_dtype, out_channels = _build_head(
+        config=config["models"]["predictor"]["head_layers"],
         out_channels=out_channels,
     )
-    segmentation_model = SegmentationModel(
+    predictor_model = Predictor(
         multi_branch_feature_extractor=multi_branch_feature_extractor,
-        head=segmentation_head,
-        head_dtype=segmentation_head_dtype,
+        head=predictor_head,
+        head_dtype=predictor_head_dtype,
     )
-    return segmentation_model
+    return predictor_model

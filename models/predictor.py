@@ -1,4 +1,4 @@
-"""Segmentation model that integrates 2D/3D backbones, fusion, and segmentation head."""
+"""Predictor model that integrates multi branch feature extractor, and a predictor head."""
 
 from typing import List, Optional, cast
 
@@ -8,7 +8,7 @@ from torch import Tensor, nn
 from models.utils import DTypeConverter
 
 
-class SegmentationModel(nn.Module):
+class Predictor(nn.Module):
     """A model that predicts a target tensor from an input tensor."""
 
     def __init__(

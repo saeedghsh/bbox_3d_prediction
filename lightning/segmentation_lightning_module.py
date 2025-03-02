@@ -6,7 +6,7 @@ import pytorch_lightning as pl
 from torch import Tensor, nn, optim
 
 from config.config_schema import LossConfig, OptimizerConfig, SchedulerConfig, TrainingConfig
-from models.segmentation import SegmentationModel
+from models.predictor import Predictor
 
 
 def _instantiate_loss(config: LossConfig) -> nn.Module:
@@ -34,7 +34,7 @@ def _instantiate_scheduler(
 class SegmentationLightningModule(pl.LightningModule):
     """PyTorch Lightning Module for segmentation.
 
-    Wraps a SegmentationModel, defines the loss function, and implements the
+    Wraps a Predictor, defines the loss function, and implements the
     training, validation, and test steps.
     """
 
@@ -42,7 +42,7 @@ class SegmentationLightningModule(pl.LightningModule):
 
     def __init__(
         self,
-        model: SegmentationModel,
+        model: Predictor,
         loss_config: LossConfig,
         training_config: TrainingConfig,
         optimizer_config: OptimizerConfig,
