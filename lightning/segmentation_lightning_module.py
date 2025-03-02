@@ -5,7 +5,7 @@ from typing import Any, Dict, Tuple, cast
 import pytorch_lightning as pl
 from torch import Tensor
 
-from config.config_schema import LossConfig, OptimizerConfig, SchedulerConfig, TrainingConfig
+from config.config_schema import LossConfig, OptimizerConfig, SchedulerConfig
 from lightning.utils import instantiate_loss, instantiate_optimizer, instantiate_scheduler
 from models.predictor import Predictor
 
@@ -25,14 +25,11 @@ class SegmentationLightningModule(pl.LightningModule):
         self,
         model: Predictor,
         loss_config: LossConfig,
-        training_config: TrainingConfig,
         optimizer_config: OptimizerConfig,
         scheduler_config: SchedulerConfig,
     ) -> None:
-        # pylint: disable=too-many-arguments, too-many-positional-arguments
         super().__init__()
         self._model = model
-        self._training_config = training_config
         self._optimizer_config = optimizer_config
         self._scheduler_config = scheduler_config
         self._loss_fn = instantiate_loss(loss_config)
