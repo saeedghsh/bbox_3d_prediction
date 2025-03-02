@@ -19,7 +19,7 @@ from typing import Dict, List, Optional, Tuple, TypedDict, cast
 import torch
 from torch import nn
 
-from config.config_schema import BackboneConfig, LayerConfig
+from config.config_schema import BackboneConfig, DataConfig, LayerConfig
 from models.feature_extractor import FeatureExtractor, MultiBranchFeatureExtractor
 from models.predictor import Predictor
 from models.utils import (
@@ -112,11 +112,11 @@ def _sum_branch_out_channels(branches: Dict[str, BranchContainer]) -> int:
 
 
 def _build_feature_extractors(
-    config_branches: dict, config_data: dict
+    config_branches: dict, config_data: DataConfig
 ) -> Tuple[List[FeatureExtractor], int]:
     branches: Dict[str, BranchContainer] = {}
     for branch_name, config_branch in config_branches.items():
-        out_channels = config_data["channels"][branch_name]
+        out_channels = config_data.channels[branch_name]
         branches[branch_name] = _build_branch(config_branch, out_channels)
     feature_extractors = [
         FeatureExtractor(
@@ -131,7 +131,7 @@ def _build_feature_extractors(
     return feature_extractors, out_channels
 
 
-def build_predictor_model(config: dict) -> Predictor:
+def build_predictor_model(config: dict, config_data: DataConfig) -> Predictor:
     """
     1: Predictor
     1.1: instantiate MultiBranchFeatureExtractor
@@ -148,7 +148,7 @@ def build_predictor_model(config: dict) -> Predictor:
     # build List[FeatureExtractor]
     feature_extractors, out_channels = _build_feature_extractors(
         config_branches=config["models"]["branches"],
-        config_data=config["data"],
+        config_data=config_data,
     )
 
     # build MultiBranchFeatureExtractor
