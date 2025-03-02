@@ -20,7 +20,7 @@ import torch
 from torch import nn
 
 from config.config_schema import BackboneConfig, LayerConfig
-from models.feature_extractor import FeatureExtractor, MultiBranchFeatureExtractor
+from models.feature_extractor import MultiBranchFeatureExtractor, StackedModel
 from models.predictor import Predictor
 from models.utils import (
     freeze_model,
@@ -109,17 +109,17 @@ def _sum_branch_out_channels(branches: Dict[str, BranchContainer]) -> int:
 
 def _build_feature_extractors(
     config_branches: dict, config_data: dict
-) -> Tuple[List[FeatureExtractor], int]:
+) -> Tuple[List[StackedModel], int]:
     branches: Dict[str, BranchContainer] = {}
     for branch_name, config_branch in config_branches.items():
         out_channels = config_data["channels"][branch_name]
         branches[branch_name] = _build_branch(config_branch, out_channels)
     feature_extractors = [
-        FeatureExtractor(
-            backbone=branch["backbone"],
-            backbone_dtype=branch["backbone_dtype"],
-            head=branch["head"],
-            head_dtype=branch["head_dtype"],
+        StackedModel(
+            models=[
+                (branch["backbone"], branch["backbone_dtype"]),
+                (branch["head"], branch["head_dtype"]),
+            ]
         )
         for branch in branches.values()
     ]
@@ -131,22 +131,20 @@ def build_predictor_model(config: dict) -> Predictor:
     """
     1: Predictor
     1.1: instantiate MultiBranchFeatureExtractor
-    1.1.1: instantiate branches FeatureExtractor
+    1.1.1: instantiate branches StackedModel
     1.1.1.1: per branch: construct the branch backbone
     1.1.1.2: per branch: construct the branch head
-    1.1.1.3: per branch: instantiate FeatureExtractor for each
+    1.1.1.3: per branch: instantiate StackedModel for each
     1.1.2: construct fusion head
     1.1.3: construct MultiBranchFeatureExtractor
     1.2: construct predictor head
     1.3: instantiate Predictor
     """
-
-    # build List[FeatureExtractor]
+    # build List[StackedModel]
     feature_extractors, out_channels = _build_feature_extractors(
         config_branches=config["models"]["branches"],
         config_data=config["data"],
     )
-
     # build MultiBranchFeatureExtractor
     fusion_head, fusion_head_dtype, out_channels = _build_head(
         config=config["models"]["fusion"]["head_layers"],
@@ -157,7 +155,6 @@ def build_predictor_model(config: dict) -> Predictor:
         head=fusion_head,
         head_dtype=fusion_head_dtype,
     )
-
     # build Predictor
     predictor_head, predictor_head_dtype, out_channels = _build_head(
         config=config["models"]["predictor"]["head_layers"],
