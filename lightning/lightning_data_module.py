@@ -2,25 +2,12 @@
 
 from typing import Callable, Dict, Optional
 
-import numpy as np
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader, Subset, random_split
 
 from config.config_schema import DataConfig, TrainingConfig
 from dataset_handler.dataset_handler import DatasetHandler, Frame
-
-
-def _reorder_channels(data: np.ndarray, source_order: str, target_order: str) -> np.ndarray:
-    """Reorders the axes of the input data from source_order to target_order.
-
-    source_order: The current axis order as a string (e.g., "hwc", "chw").
-    target_order: The desired axis order as a string (e.g., "chw", "hwc").
-    """
-    if set(source_order) != set(target_order):
-        raise ValueError(f"Incompatible source and target orders: {source_order} -> {target_order}")
-
-    permutation = tuple(source_order.index(axis) for axis in target_order)
-    return np.transpose(data, permutation)
+from lightning.utils import reorder_channels
 
 
 class MultimodalDataModule(pl.LightningDataModule):  # pylint: disable=too-many-instance-attributes
@@ -67,8 +54,8 @@ class MultimodalDataModule(pl.LightningDataModule):  # pylint: disable=too-many-
         pc_target_order = self._backbone_channels_order["pc"]
 
         def transform(frame: Frame) -> Frame:
-            frame.rgb = _reorder_channels(frame.rgb, rgb_source_order, rgb_target_order)
-            frame.pc = _reorder_channels(frame.pc, pc_source_order, pc_target_order)
+            frame.rgb = reorder_channels(frame.rgb, rgb_source_order, rgb_target_order)
+            frame.pc = reorder_channels(frame.pc, pc_source_order, pc_target_order)
             return frame
 
         return transform

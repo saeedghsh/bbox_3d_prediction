@@ -2,6 +2,7 @@
 
 from typing import Iterator
 
+import numpy as np
 from torch import nn, optim
 
 from config.config_schema import LossConfig, OptimizerConfig, SchedulerConfig
@@ -30,3 +31,16 @@ def instantiate_scheduler(
     scheduler_cls = getattr(optim.lr_scheduler, config.type)
     scheduler_args = config.keep_valid_args(scheduler_cls)
     return scheduler_cls(optimizer, **scheduler_args)  # type: ignore
+
+
+def reorder_channels(data: np.ndarray, source_order: str, target_order: str) -> np.ndarray:
+    """Reorders the axes of the input data from source_order to target_order.
+
+    source_order: The current axis order as a string (e.g., "hwc", "chw").
+    target_order: The desired axis order as a string (e.g., "chw", "hwc").
+    """
+    if set(source_order) != set(target_order):
+        raise ValueError(f"Incompatible source and target orders: {source_order} -> {target_order}")
+
+    permutation = tuple(source_order.index(axis) for axis in target_order)
+    return np.transpose(data, permutation)
