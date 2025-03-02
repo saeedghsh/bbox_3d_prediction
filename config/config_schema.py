@@ -47,8 +47,6 @@ class DataConfig(BaseConfig):
     dataset_dir: Path
     split_val: float
     split_test: float
-    target_height: int
-    target_width: int
     channels_order: Dict[str, str]
     channels: Dict[str, int]
 
@@ -56,8 +54,6 @@ class DataConfig(BaseConfig):
         self.dataset_dir = Path(self.dataset_dir).resolve()
         self.split_val = float(self.split_val)
         self.split_test = float(self.split_test)
-        self.target_height = int(self.target_height)
-        self.target_width = int(self.target_width)
         self.channels_order = {k: v.lower() for k, v in self.channels_order.items()}
         self.channels = {k: int(v) for k, v in self.channels.items()}
 

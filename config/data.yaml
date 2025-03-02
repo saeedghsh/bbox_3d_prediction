@@ -12,7 +12,3 @@ channels_order:
 channels:
   rgb: 3
   pc: 3
-
-# Target resolution to resize images and point clouds if needed.
-target_height: 512
-target_width: 512
