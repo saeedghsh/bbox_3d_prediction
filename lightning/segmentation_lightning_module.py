@@ -17,6 +17,8 @@ class SegmentationLightningModule(pl.LightningModule):
     training, validation, and test steps.
     """
 
+    # pylint: disable=unused-argument, arguments-differ
+
     BatchType = Tuple[Tensor, Tensor, Tensor, Tensor]
 
     def __init__(
@@ -39,29 +41,21 @@ class SegmentationLightningModule(pl.LightningModule):
         """Forward pass through the segmentation model."""
         return cast(Tensor, self._model(*args, **kwargs))
 
-    def training_step(self, batch: BatchType, batch_idx: int) -> Tensor:
-        # pylint: disable=unused-argument, arguments-differ
+    def _step(self, batch: BatchType, step_name: str) -> Tensor:
         image, pointcloud, mask, _ = batch  # bbox3d is ignored for segmentation
         logits = self.forward([image, pointcloud])
         loss: Tensor = self._loss_fn(logits, mask)
-        self.log("train_loss", loss, prog_bar=True, on_step=True, on_epoch=True)
+        self.log(f"{step_name}_loss", loss, prog_bar=True, on_step=True, on_epoch=True)
         return loss
+
+    def training_step(self, batch: BatchType, batch_idx: int) -> Tensor:
+        return self._step(batch, "train")
 
     def validation_step(self, batch: BatchType, batch_idx: int) -> Tensor:
-        # pylint: disable=unused-argument, arguments-differ
-        image, pointcloud, mask, _ = batch
-        logits = self.forward([image, pointcloud])
-        loss: Tensor = self._loss_fn(logits, mask)
-        self.log("val_loss", loss, prog_bar=True, on_epoch=True)
-        return loss
+        return self._step(batch, "validation")
 
     def test_step(self, batch: BatchType, batch_idx: int) -> Tensor:
-        # pylint: disable=unused-argument, arguments-differ
-        image, pointcloud, mask, _ = batch
-        logits = self.forward([image, pointcloud])
-        loss: Tensor = self._loss_fn(logits, mask)
-        self.log("test_loss", loss, prog_bar=True, on_epoch=True)
-        return loss
+        return self._step(batch, "test")
 
     def configure_optimizers(self) -> Dict[str, Any]:  # type: ignore
         optimizer = instantiate_optimizer(self._optimizer_config, self.parameters())
