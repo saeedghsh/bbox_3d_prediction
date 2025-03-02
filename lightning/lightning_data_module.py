@@ -35,7 +35,9 @@ class MultimodalDataModule(pl.LightningDataModule):  # pylint: disable=too-many-
 
     def setup(self, stage: Optional[str] = None) -> None:  # pylint: disable=unused-argument
         """Set up datasets and define transforms based on model input requirements."""
-        full_dataset = DatasetHandler(config=self._data_config, transform=self._build_transform())
+        full_dataset = DatasetHandler(
+            data_dir=self._data_config.dataset_dir, transform=self._build_transform()
+        )
 
         dataset_len = len(full_dataset)
         test_size = int(dataset_len * self._data_config.split_test)

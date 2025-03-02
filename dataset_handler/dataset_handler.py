@@ -9,8 +9,6 @@ import cv2
 import numpy as np
 from torch.utils.data import Dataset
 
-from config.config_schema import DataConfig
-
 
 class FilePaths:
     """Class to manage file paths for multimodal data"""
@@ -49,10 +47,9 @@ class DatasetHandler(Dataset):  # type: ignore[type-arg]
     """Custom dataset for multimodal data"""
 
     def __init__(
-        self, config: DataConfig, transform: Optional[Callable[[Frame], Frame]] = None
+        self, data_dir: Path, transform: Optional[Callable[[Frame], Frame]] = None
     ) -> None:
-        self._config = config
-        self._data_dir = config.dataset_dir
+        self._data_dir = data_dir
         self._file_paths = FilePaths(self._data_dir)
 
         self._transform = transform if transform else lambda x: x

@@ -39,7 +39,7 @@ def main(_: Sequence[str]) -> int:
     """Main function: loads the dataset and visualizes the data."""
     data_config_path = Path("./config/data.yaml")
     data_config = DataConfig.from_dict(read_config(data_config_path))
-    dataset_handler = DatasetHandler(data_config)
+    dataset_handler = DatasetHandler(data_dir=data_config.dataset_dir)
 
     visualizer = Visualizer(config={"visualize_2d": True, "visualize_3d": True})
     _draw_frame(dataset_handler, visualizer)
