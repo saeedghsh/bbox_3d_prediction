@@ -18,16 +18,16 @@ models:
         remove_head: true
 
       head_layers:
-        - type: "ConvTranspose2d"
-          out_channels: 256
-          kernel_size: 4
-          stride: 2
-          padding: 1
-        - type: "ConvTranspose2d"
-          out_channels: 128
-          kernel_size: 4
-          stride: 2
-          padding: 1
+        # - type: "ConvTranspose2d"
+        #   out_channels: 256
+        #   kernel_size: 4
+        #   stride: 2
+        #   padding: 1
+        # - type: "ConvTranspose2d"
+        #   out_channels: 128
+        #   kernel_size: 4
+        #   stride: 2
+        #   padding: 1
 
     pc:
       input_channels_order: "chw"
@@ -40,63 +40,63 @@ models:
         remove_head: true
 
       head_layers:
-        - type: "ConvTranspose2d"
-          out_channels: 256
-          kernel_size: 4
-          stride: 2
-          padding: 1
-        - type: "ConvTranspose2d"
-          out_channels: 128
-          kernel_size: 4
-          stride: 2
-          padding: 1
+        # - type: "ConvTranspose2d"
+        #   out_channels: 256
+        #   kernel_size: 4
+        #   stride: 2
+        #   padding: 1
+        # - type: "ConvTranspose2d"
+        #   out_channels: 128
+        #   kernel_size: 4
+        #   stride: 2
+        #   padding: 1
 
   fusion:
     head_layers:
-      - type: "Conv2d"
-        out_channels: 128
-        kernel_size: 3
-        stride: 1
-        padding: 1
-      - type: "ReLU"
-      - type: "Conv2d"
-        out_channels: 128
-        kernel_size: 3
-        stride: 1
-        padding: 1
-      - type: "ReLU"
+      # - type: "Conv2d"
+      #   out_channels: 128
+      #   kernel_size: 3
+      #   stride: 1
+      #   padding: 1
+      # - type: "ReLU"
+      # - type: "Conv2d"
+      #   out_channels: 128
+      #   kernel_size: 3
+      #   stride: 1
+      #   padding: 1
+      # - type: "ReLU"
 
   predictor:
     head_layers:
-      - type: "ConvTranspose2d"
-        out_channels: 128
-        kernel_size: 4
-        stride: 2
-        padding: 1
-      - type: "ReLU"
-      - type: "ConvTranspose2d"
-        out_channels: 64
-        kernel_size: 4
-        stride: 2
-        padding: 1
-      - type: "ReLU"
-      - type: "ConvTranspose2d"
-        out_channels: 32
-        kernel_size: 4
-        stride: 2
-        padding: 1
-      - type: "ReLU"
-      - type: "ConvTranspose2d"
-        out_channels: 16
-        kernel_size: 4
-        stride: 2
-        padding: 1
-      - type: "ReLU"
-      - type: "ConvTranspose2d"
-        out_channels: 32
-        kernel_size: 4
-        stride: 2
-        padding: 1
+      # - type: "ConvTranspose2d"
+      #   out_channels: 128
+      #   kernel_size: 4
+      #   stride: 2
+      #   padding: 1
+      # - type: "ReLU"
+      # - type: "ConvTranspose2d"
+      #   out_channels: 64
+      #   kernel_size: 4
+      #   stride: 2
+      #   padding: 1
+      # - type: "ReLU"
+      # - type: "ConvTranspose2d"
+      #   out_channels: 32
+      #   kernel_size: 4
+      #   stride: 2
+      #   padding: 1
+      # - type: "ReLU"
+      # - type: "ConvTranspose2d"
+      #   out_channels: 16
+      #   kernel_size: 4
+      #   stride: 2
+      #   padding: 1
+      # - type: "ReLU"
+      # - type: "ConvTranspose2d"
+      #   out_channels: 32
+      #   kernel_size: 4
+      #   stride: 2
+      #   padding: 1
       - type: "ReLU"
 
 loss:
