@@ -14,7 +14,7 @@ models:
         model_name: "MaskRCNN_ResNet50_FPN"
         sub_module: "detection"
         pretrained: true
-        freeze_backbone: false
+        freeze_backbone: true
         remove_head: true
 
       head_layers:
@@ -36,7 +36,7 @@ models:
         model_name: "MaskRCNN_ResNet50_FPN"
         sub_module: "detection"
         pretrained: true
-        freeze_backbone: false
+        freeze_backbone: true
         remove_head: true
 
       head_layers:
@@ -93,10 +93,12 @@ models:
         padding: 1
       - type: "ReLU"
       - type: "ConvTranspose2d"
-        out_channels: 8
+        out_channels: 32
         kernel_size: 4
         stride: 2
         padding: 1
+      - type: "ReLU"
+
 loss:
   type: "BCEWithLogitsLoss"
   reduction: "mean"
