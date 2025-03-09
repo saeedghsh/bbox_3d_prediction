@@ -14,6 +14,7 @@ Future improvements should include validation checks after head config layers'
 adjustments.
 """
 
+from collections import OrderedDict
 from typing import List, Optional, Tuple, cast
 
 from torch import nn
@@ -50,12 +51,17 @@ def _single_layer_module(config: LayerConfig) -> nn.Module:
 
 def _multi_layer_module(configs: List[LayerConfig]) -> nn.Module:
     """Return a (multi layer) module based on configuration, first layer is DTypeConverter."""
-    if len(configs) == 0:
+    if not configs:
         return nn.Identity()
-    modules_list: List[nn.Module] = [_single_layer_module(config) for config in configs]
-    if (dtype := model_dtype(modules_list[0])) is not None:
-        modules_list.insert(0, DTypeConverter(dtype))
-    return nn.Sequential(*modules_list)
+
+    modules_list = [(config.type.lower(), _single_layer_module(config)) for config in configs]
+    if (dtype := model_dtype(modules_list[0][1])) is not None:
+        modules_list.insert(0, ("dtype_converter", DTypeConverter(dtype)))
+
+    modules_dict = OrderedDict(
+        (f"{module_name}_{idx}", module) for idx, (module_name, module) in enumerate(modules_list)
+    )
+    return nn.Sequential(modules_dict)
 
 
 def _build_module(configs: List[LayerConfig], previous_out_channels: int) -> Tuple[nn.Module, int]:
