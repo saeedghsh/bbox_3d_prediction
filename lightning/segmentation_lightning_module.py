@@ -40,7 +40,7 @@ class SegmentationLightningModule(pl.LightningModule):
 
     def _step(self, batch: BatchType, step_name: str) -> Tensor:
         image, pointcloud, mask, _ = batch  # bbox3d is ignored for segmentation
-        logits = self.forward([image, pointcloud])
+        logits = self.forward({"rgb": image, "pc": pointcloud})
         loss: Tensor = self._loss_fn(logits, mask)
         self.log(f"{step_name}_loss", loss, prog_bar=True, on_step=True, on_epoch=True)
         return loss

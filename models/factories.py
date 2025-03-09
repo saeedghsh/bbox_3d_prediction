@@ -14,7 +14,7 @@ Future improvements should include validation checks after head config layers'
 adjustments.
 """
 
-from typing import Dict, List, Optional, Tuple, TypedDict, cast
+from typing import List, Optional, Tuple, cast
 
 from torch import nn
 
@@ -92,22 +92,6 @@ def _build_backbone(config: Optional[BackboneConfig], out_channels: int) -> Tupl
     return backbone_module, model_out_channels(model)
 
 
-class BranchContainer(TypedDict, total=False):
-    """Intermediate container for branches."""
-
-    backbone: nn.Module
-    head: nn.Module
-    out_channels: int
-
-
-def _build_branch(config_branch: dict, out_channels: int) -> BranchContainer:
-    branch = BranchContainer()
-    branch["backbone"], out_channels = _build_backbone(config_branch["backbone"], out_channels)
-    branch["head"], out_channels = _build_module(config_branch["head_layers"], out_channels)
-    branch["out_channels"] = out_channels
-    return branch
-
-
 def build_predictor_model(config: dict, config_data: DataConfig) -> Predictor:
     """
     1: Predictor
@@ -121,29 +105,26 @@ def build_predictor_model(config: dict, config_data: DataConfig) -> Predictor:
     1.2: construct predictor head
     1.3: instantiate Predictor
     """
-    # instantiate branches FeatureExtractor
-    branches: Dict[str, BranchContainer] = {
-        branch_name: _build_branch(config_branch, out_channels=config_data.channels[branch_name])
-        for branch_name, config_branch in config["models"]["branches"].items()
-    }
     # branches' output will be concatenated in MultiBranchFeatureExtractor. The
     # concatenated output will be the input for the fusion head or predictor
     # head (if no fusion head). Either way, whoever the next model is, its
     # in_channels will be the sum of the out_channels of all branches
-    out_channels = sum(branch["out_channels"] for branch in branches.values())
-    feature_extractors = [
-        FeatureExtractor(backbone=branch["backbone"], head=branch["head"])
-        for branch in branches.values()
-    ]
+    branches_out_channels = []
+    feature_extractor_branches = {}
+    for branch_name, config_branch in config["models"]["branches"].items():
+        out_channels = config_data.channels[branch_name]
+        branch_backbone, out_channels = _build_backbone(config_branch["backbone"], out_channels)
+        branch_head, out_channels = _build_module(config_branch["head_layers"], out_channels)
+        branches_out_channels.append(out_channels)
+        feature_extractor_branches[branch_name] = FeatureExtractor(branch_backbone, branch_head)
+    out_channels = sum(branches_out_channels)
 
     # build MultiBranchFeatureExtractor
     fusion_head, out_channels = _build_module(
         config["models"]["fusion"]["head_layers"], out_channels
     )
     multi_branch_feature_extractor = MultiBranchFeatureExtractor(
-        branches=feature_extractors,
-        head=fusion_head,
-        head_dtype=model_dtype(fusion_head),
+        feature_extractor_branches, fusion_head, model_dtype(fusion_head)
     )
 
     # build Predictor

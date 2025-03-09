@@ -64,7 +64,7 @@ class DTypeConverter(nn.Module):
         super().__init__()
         self.dtype = dtype
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> torch.Tensor:
         """Forward pass."""
         return x.to(dtype=self.dtype)
 
@@ -81,7 +81,8 @@ class TensorConcatenator(nn.Module):
         shapes = {t.shape[2:] for t in tensors}  # Extract spatial dimensions (H, W, ...)
         if len(shapes) > 1:
             raise ValueError(f"Inconsistent tensor shapes: {shapes}")
-        return torch.cat(self._dtype_convertor(tensors), dim=1)
+        tensors = [self._dtype_convertor(t) for t in tensors]
+        return torch.cat(tensors, dim=1)
 
 
 def _get_tv_models_sub_module(sub_module_name: str = "") -> ModuleType:
