@@ -179,11 +179,6 @@ def _layers_with_out_channels() -> List[str]:
     return ["Conv1d", "Conv2d", "Conv3d", "ConvTranspose1d", "ConvTranspose2d", "ConvTranspose3d"]
 
 
-def _layers_with_out_features() -> List[str]:
-    """Return a list of layer types that accept out_features as input arg."""
-    return ["Linear"]
-
-
 def update_in_channels(configs: List[LayerConfig], previous_out_channels: int) -> List[LayerConfig]:
     """Update (actually 'set') in_channels for each layer in the list."""
     out_channels = previous_out_channels
