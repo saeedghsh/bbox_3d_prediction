@@ -48,7 +48,7 @@ MultiBranchFeatureExtractor):
 """
 
 from types import ModuleType
-from typing import Callable, List, Optional, Tuple, cast
+from typing import Callable, List, Optional, cast
 
 import torch
 import torchvision.models as tv_models
@@ -72,15 +72,16 @@ class DTypeConverter(nn.Module):
 class TensorConcatenator(nn.Module):
     """Concatenate feature maps from multiple branches with shape validation."""
 
-    def __init__(self) -> None:
+    def __init__(self, dtype_convertor: Optional[nn.Module] = None) -> None:
         super().__init__()
+        self._dtype_convertor = dtype_convertor or nn.Identity()
 
     def forward(self, tensors: List[Tensor]) -> Tensor:
         """Forward pass."""
         shapes = {t.shape[2:] for t in tensors}  # Extract spatial dimensions (H, W, ...)
         if len(shapes) > 1:
             raise ValueError(f"Inconsistent tensor shapes: {shapes}")
-        return torch.cat(tensors, dim=1)
+        return torch.cat(self._dtype_convertor(tensors), dim=1)
 
 
 def _get_tv_models_sub_module(sub_module_name: str = "") -> ModuleType:
@@ -173,13 +174,34 @@ def model_out_channels(model: nn.Module) -> int:
     )
 
 
-def set_in_channels(
-    layers_config: List[LayerConfig], out_channels: int
-) -> Tuple[List[LayerConfig], int]:
-    """Set in_channels for each layer in the list."""
-    for layer_config in layers_config:
-        if layer_config.type in ["Conv2d", "ConvTranspose2d"]:
-            layer_config.kwargs["in_channels"] = out_channels
-            if not (out_channels := layer_config.kwargs.get("out_channels")):  # type: ignore
-                raise ValueError(f"out_channels must be defined for {layer_config.type}")
-    return layers_config, out_channels
+def _layers_with_out_channels() -> List[str]:
+    """Return a list of layer types that accept out_channels as input arg."""
+    return ["Conv1d", "Conv2d", "Conv3d", "ConvTranspose1d", "ConvTranspose2d", "ConvTranspose3d"]
+
+
+def _layers_with_out_features() -> List[str]:
+    """Return a list of layer types that accept out_features as input arg."""
+    return ["Linear"]
+
+
+def update_in_channels(configs: List[LayerConfig], previous_out_channels: int) -> List[LayerConfig]:
+    """Update (actually 'set') in_channels for each layer in the list."""
+    out_channels = previous_out_channels
+    for config in configs:
+        if config.type not in _layers_with_out_channels():
+            continue
+        config.kwargs["in_channels"] = out_channels
+        if not (out_channels := config.kwargs.get("out_channels")):  # type: ignore
+            raise ValueError(f"out_channels must be defined for {config.type}")
+    return configs
+
+
+def config_out_channels(configs: List[LayerConfig], last_out_channels: int) -> int:
+    """Compute the last out_channels from the list of layers."""
+    out_channels = last_out_channels
+    for config in configs:
+        if config.type not in _layers_with_out_channels():
+            continue
+        if not (out_channels := config.kwargs.get("out_channels")):  # type: ignore
+            raise ValueError(f"out_channels must be defined for {config.type}")
+    return out_channels
